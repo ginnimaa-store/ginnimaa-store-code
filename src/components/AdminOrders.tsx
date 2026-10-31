@@ -1,5 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Package, TrendingUp, Clock, CheckCircle, Eye, X } from 'lucide-react';
+import { 
+  Package, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle, 
+  Eye, 
+  X, 
+  MapPin, 
+  Phone, 
+  MessageSquare, 
+  ExternalLink,
+  CheckCheck
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Order, OrderItemJson } from '@/types';
 import { formatPrice } from '@/lib/format';
@@ -32,7 +44,7 @@ interface DisplayItem {
 function getDisplayItems(order: AdminOrder): DisplayItem[] {
   if (order.order_items && order.order_items.length > 0) {
     return order.order_items.map(oi => ({
-      product_name: oi.product?.name || 'Product',
+      product_name: oi.product?.name || 'পণ্য',
       product_image: oi.product?.image_url || null,
       pack_size: oi.product?.pack_size || null,
       quantity: oi.quantity,
@@ -108,62 +120,77 @@ export function AdminOrders() {
     }
   };
 
+  const updatePaymentStatus = async (orderId: string, payment_status: string) => {
+    const { data } = await supabase
+      .from('orders')
+      .update({ payment_status })
+      .eq('id', orderId)
+      .select()
+      .single();
+    if (data) {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, payment_status } : o));
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, payment_status });
+      }
+    }
+  };
+
   const statusColors: Record<string, string> = {
-    'New': 'bg-amber-100 text-amber-700',
-    'Confirmed': 'bg-blue-100 text-blue-700',
-    'Packed': 'bg-cyan-100 text-cyan-700',
-    'Out for Delivery': 'bg-indigo-100 text-indigo-700',
-    'Delivered': 'bg-green-100 text-green-700',
-    'Cancelled': 'bg-red-100 text-red-700',
+    'New': 'bg-amber-100 text-amber-800 border-amber-200',
+    'Confirmed': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Packed': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    'Out for Delivery': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    'Delivered': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    'Cancelled': 'bg-rose-100 text-rose-800 border-rose-200',
   };
 
   return (
     <div>
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
-            <Package size={18} className="text-gray-400" />
-            <span className="text-xs text-gray-500 font-medium">Total Orders</span>
+            <Package size={17} className="text-gray-400" />
+            <span className="text-xs text-gray-500 font-semibold">মোট অর্ডার</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <p className="text-2xl font-black text-gray-900">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
-            <Clock size={18} className="text-amber-400" />
-            <span className="text-xs text-gray-500 font-medium">In Progress</span>
+            <Clock size={17} className="text-amber-500" />
+            <span className="text-xs text-gray-500 font-semibold">প্রক্রিয়াধীন</span>
           </div>
-          <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
+          <p className="text-2xl font-black text-amber-600">{stats.pending}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
-            <CheckCircle size={18} className="text-green-500" />
-            <span className="text-xs text-gray-500 font-medium">Delivered</span>
+            <CheckCircle size={17} className="text-emerald-500" />
+            <span className="text-xs text-gray-500 font-semibold">ডেলিভার্ড</span>
           </div>
-          <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
+          <p className="text-2xl font-black text-emerald-700">{stats.delivered}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp size={18} className="text-blue-400" />
-            <span className="text-xs text-gray-500 font-medium">Revenue</span>
+            <TrendingUp size={17} className="text-blue-500" />
+            <span className="text-xs text-gray-500 font-semibold">মোট আয়</span>
           </div>
-          <p className="text-2xl font-bold text-blue-600">{formatPrice(stats.revenue)}</p>
+          <p className="text-2xl font-black text-blue-700">{formatPrice(stats.revenue)}</p>
         </div>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
         {['all', ...STATUSES].map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors capitalize ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-colors ${
               filter === s
-                ? 'bg-green-700 text-white'
-                : 'bg-white text-gray-600 border border-gray-200'
+                ? 'bg-emerald-800 text-white shadow-xs'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
-            {s === 'all' ? 'All Orders' : s}
+            {s === 'all' ? 'সব অর্ডার' : s}
           </button>
         ))}
       </div>
@@ -171,50 +198,78 @@ export function AdminOrders() {
       {/* Orders list */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <div className="w-8 h-8 border-3 border-green-700 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-emerald-700 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-gray-500 bg-white rounded-2xl border border-gray-100">
           <Package size={40} className="mx-auto text-gray-300" />
-          <p className="font-medium mt-2">No orders found</p>
+          <p className="font-semibold text-sm mt-2">কোনো অর্ডার পাওয়া যায়নি</p>
         </div>
       ) : (
         <div className="space-y-3">
           {orders.map(order => (
-            <div key={order.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div key={order.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs hover:border-emerald-100 transition-all">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-gray-900 text-sm">{order.order_number}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColors[order.status] || 'bg-gray-100 text-gray-600'}`}>
                       {order.status}
                     </span>
+                    {order.payment_status && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        order.payment_status === 'VERIFIED'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {order.payment_status === 'VERIFIED' ? 'পেমেন্ট যাচাইকৃত' : 'পেমেন্ট বাকি'}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{order.customer_name} • {order.mobile_number}</p>
+
+                  <p className="text-sm font-semibold text-gray-800 mt-1">
+                    {order.customer_name} <span className="text-xs font-normal text-gray-500">• {order.mobile_number}</span>
+                  </p>
+
                   <p className="text-xs text-gray-400 mt-0.5">
                     {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • {new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{getDisplayItems(order).length} items • PIN: {order.pin_code}</p>
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
+                    <span>{getDisplayItems(order).length}টি আইটেম</span>
+                    <span>• PIN: <b>{order.pin_code}</b></span>
+                    <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-medium text-gray-700">
+                      {order.payment_method || 'COD'}
+                    </span>
+                    {order.payment_ref_id && (
+                      <span className="text-emerald-800 font-mono text-[11px]">
+                        Ref: {order.payment_ref_id}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
                 <div className="text-right shrink-0">
-                  <p className="font-bold text-green-700">{formatPrice(Number(order.total))}</p>
+                  <p className="font-extrabold text-emerald-800 text-base">{formatPrice(Number(order.total))}</p>
                   <button
                     onClick={() => setSelectedOrder(order)}
-                    className="mt-1.5 text-xs font-semibold text-green-700 flex items-center gap-1 ml-auto"
+                    className="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1 ml-auto transition-colors"
                   >
-                    <Eye size={14} /> View
+                    <Eye size={13} /> বিস্তারিত
                   </button>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-gray-100 flex gap-1.5 overflow-x-auto">
+
+              {/* Status Update Quick Buttons */}
+              <div className="mt-3 pt-3 border-t border-gray-100 flex gap-1.5 overflow-x-auto scrollbar-none">
                 {STATUSES.map(s => (
                   <button
                     key={s}
                     onClick={() => updateStatus(order.id, s)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                       order.status === s
-                        ? statusColors[s] + ' ring-1 ring-offset-1'
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                        ? statusColors[s] + ' font-bold ring-1 ring-offset-1'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     {s}
@@ -230,98 +285,7 @@ export function AdminOrders() {
       {selectedOrder && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setSelectedOrder(null)}>
           <div
-            className="bg-white rounded-t-3xl md:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+            className="bg-white rounded-t-3xl md:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900">Order Details</h3>
-              <button onClick={() => setSelectedOrder(null)} className="text-gray-400">
-                <X size={22} />
-              </button>
-            </div>
-            <div className="p-5">
-              <div className="text-center mb-4">
-                <p className="text-xs text-gray-500">Order ID</p>
-                <p className="text-lg font-bold text-green-700">{selectedOrder.order_number}</p>
-                <span className={`inline-block mt-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${statusColors[selectedOrder.status] || 'bg-gray-100 text-gray-600'}`}>
-                  {selectedOrder.status}
-                </span>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Customer</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedOrder.customer_name}</p>
-                  <p className="text-sm text-gray-600">{selectedOrder.mobile_number}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Delivery Address</p>
-                  <p className="text-sm text-gray-700">{selectedOrder.address}</p>
-                  <p className="text-sm text-gray-600">PIN: {selectedOrder.pin_code}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Payment</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedOrder.payment_method || 'Cash on Delivery'}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 pt-3">
-                <p className="font-semibold text-sm text-gray-900 mb-2">Items</p>
-                <div className="space-y-2">
-                  {getDisplayItems(selectedOrder).map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                        <img src={item.product_image || ''} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-gray-800 font-medium truncate">{item.product_name}</p>
-                        <p className="text-xs text-gray-400">{item.pack_size} • Qty {item.quantity}</p>
-                      </div>
-                      <span className="font-medium text-gray-900">{formatPrice(item.line_total)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">{formatPrice(Number(selectedOrder.subtotal))}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery charge</span>
-                  <span className="font-medium">
-                    {Number(selectedOrder.delivery_charge) === 0 ? <span className="text-green-600">FREE</span> : formatPrice(Number(selectedOrder.delivery_charge))}
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-gray-100 flex justify-between">
-                  <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-bold text-green-700">{formatPrice(Number(selectedOrder.total))}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-500 font-medium mb-2">Update Status</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {STATUSES.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => updateStatus(selectedOrder.id, s)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        selectedOrder.status === s
-                          ? statusColors[s] + ' ring-1 ring-offset-1'
-                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5
