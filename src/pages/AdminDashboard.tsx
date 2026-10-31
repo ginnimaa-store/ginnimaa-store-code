@@ -1,17 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, ShoppingBag, Package, Store, MessageCircle } from 'lucide-react';
+import { 
+  LogOut, 
+  ShoppingBag, 
+  Package, 
+  Store, 
+  Settings, 
+  Tags, 
+  MapPin, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle2, 
+  DollarSign 
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { formatPrice } from '@/lib/format';
 import { AdminOrders } from '@/components/AdminOrders';
 import { AdminProducts } from '@/components/AdminProducts';
 import { AdminSettings } from '@/components/AdminSettings';
 
-type Tab = 'orders' | 'products' | 'settings';
+type Tab = 'overview' | 'orders' | 'products' | 'categories' | 'pincodes' | 'settings';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const [tab, setTab] = useState<Tab>('orders');
+  const [tab, setTab] = useState<Tab>('overview');
+
+  // ড্যাশবোর্ড মেট্রিক্স স্টেট
+  const [metrics, setMetrics] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    deliveredOrders: 0,
+    totalSales: 0,
+    totalProducts: 0
+  });
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+
+  useEffect(() => {
+    async function loadOverview() {
+      try {
+        const [ordersRes, productsRes] = await Promise.all([
+          supabase.from('orders').select('id, total, status'),
+          supabase.from('products').select('id', { count: 'exact', head: true })
+        ]);
+
+        const orders = ordersRes.data || [];
+        const totalSales = orders.reduce((sum, ord) => sum + (Number(ord.total) || 0), 0);
+        const pending = orders.filter(o => o.status === 'New' || o.status === 'PLACED' || o.status === 'PENDING').length;
+        const delivered = orders.filter(o => o.status === 'DELIVERED').length;
+
+        setMetrics({
+          totalOrders: orders.length,
+          pendingOrders: pending,
+          deliveredOrders: delivered,
+          totalSales,
+          totalProducts: productsRes.count || 0
+        });
+      } catch (err) {
+        console.error('Error fetching admin metrics:', err);
+      } finally {
+        setLoadingMetrics(false);
+      }
+    }
+    loadOverview();
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -21,70 +74,16 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-green-700">GINNIMAA</span>
-            <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Admin</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl font-black text-emerald-800 tracking-tight">GINNIMAA</span>
+            <span className="text-[11px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-md">
+              অ্যাডমিন কন্ট্রোল
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Store size={16} /> <span className="hidden sm:inline">View Store</span>
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut size={16} /> <span className="hidden sm:inline">Logout</span>
-            </button>
-          </div>
-        </div>
-        {/* Tab navigation */}
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setTab('orders')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                tab === 'orders'
-                  ? 'border-green-700 text-green-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <ShoppingBag size={16} /> Orders
-            </button>
-            <button
-              onClick={() => setTab('products')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                tab === 'products'
-                  ? 'border-green-700 text-green-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Package size={16} /> Products
-            </button>
-            <button
-              onClick={() => setTab('settings')}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                tab === 'settings'
-                  ? 'border-green-700 text-green-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <MessageCircle size={16} /> Settings
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        {tab === 'orders' && <AdminOrders />}
-        {tab === 'products' && <AdminProducts />}
-        {tab === 'settings' && <AdminSettings />}
-      </div>
-    </div>
-  );
-}
+              className="flex items-center gap-1
+            
