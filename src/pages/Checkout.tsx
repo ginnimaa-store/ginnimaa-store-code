@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Banknote, Loader2 } from 'lucide-react';
+import { ArrowLeft, Banknote, QrCode, MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { supabase } from '@/lib/supabase';
 import { formatPrice, generateOrderNumber } from '@/lib/format';
@@ -12,6 +12,17 @@ export function Checkout() {
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
   const [pinCode, setPinCode] = useState('');
+  
+  // GPS Location state
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [locationSuccess, setLocationSuccess] = useState(false);
+
+  // Payment State
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'UPI_QR'>('COD');
+  const [paymentRefId, setPaymentRefId] = useState('');
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
 
@@ -20,12 +31,37 @@ export function Checkout() {
     return null;
   }
 
+  // GPS Coordinates Fetch
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('আপনার ডিভাইসে GPS সুবিধা সমর্থিত নয়।');
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setGettingLocation(false);
+        setLocationSuccess(true);
+      },
+      () => {
+        setGettingLocation(false);
+        alert('সঠিক লোকেশন পাওয়া যায়নি। দয়া করে ডিভাইসের লোকেশন পারমিশন দিন।');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!name.trim()) e.name = 'Please enter your name';
-    if (!/^\d{10}$/.test(mobile)) e.mobile = 'Enter a valid 10-digit mobile number';
-    if (!address.trim()) e.address = 'Please enter your delivery address';
-    if (!/^\d{6}$/.test(pinCode)) e.pinCode = 'Enter a valid 6-digit PIN code';
+    if (!name.trim()) e.name = 'অনুগ্রহ করে আপনার নাম লিখুন';
+    if (!/^\d{10}$/.test(mobile)) e.mobile = 'সঠিক ১০ সংখ্যার মোবাইল নম্বর লিখুন';
+    if (!address.trim()) e.address = 'সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন';
+    if (!/^\d{6}$/.test(pinCode)) e.pinCode = 'সঠিক ৬ সংখ্যার পিন কোড লিখুন';
+    if (paymentMethod === 'UPI_QR' && !paymentRefId.trim()) {
+      e.paymentRef = 'পেমেন্ট সম্পন্ন করার পর রেফারেন্স / UTR নম্বর লিখুন';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -50,7 +86,7 @@ export function Checkout() {
 
     if (customerErr || !customer) {
       setPlacing(false);
-      setErrors({ form: 'Failed to save customer details. Please try again.' });
+      setErrors({ form: 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।' });
       return;
     }
 
@@ -67,7 +103,7 @@ export function Checkout() {
         subtotal: getSubtotal(),
         delivery_charge: getDeliveryCharge(),
         total: getTotal(),
-        payment_method: 'Cash on Delivery',
+        payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
         status: 'New',
       })
       .select()
@@ -75,7 +111,7 @@ export function Checkout() {
 
     if (orderErr || !order) {
       setPlacing(false);
-      setErrors({ form: 'Failed to place order. Please try again.' });
+      setErrors({ form: 'অর্ডার সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।' });
       return;
     }
 
@@ -93,7 +129,7 @@ export function Checkout() {
 
     if (itemsErr) {
       setPlacing(false);
-      setErrors({ form: 'Failed to save order items. Please try again.' });
+      setErrors({ form: 'অর্ডার আইটেম সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।' });
       return;
     }
 
@@ -105,129 +141,114 @@ export function Checkout() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-4">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-600 text-sm font-medium mb-4">
-        <ArrowLeft size={18} /> Back to Cart
+        <ArrowLeft size={18} /> কার্টে ফিরে যান
       </button>
 
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Checkout</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-4">চেকআউট ও ডেলিভারি</h1>
 
       {/* Customer details form */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <h3 className="font-bold text-gray-900 mb-3">Delivery Details</h3>
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-900">ডেলিভারি ঠিকানা ও তথ্য</h3>
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            disabled={gettingLocation}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              locationSuccess
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
+          >
+            {gettingLocation ? (
+              <>
+                <Loader2 size={13} className="animate-spin" /> লোকেশন নেওয়া হচ্ছে...
+              </>
+            ) : locationSuccess ? (
+              <>
+                <CheckCircle2 size={13} /> GPS লোকেশন যুক্ত হয়েছে
+              </>
+            ) : (
+              <>
+                <MapPin size={13} /> লাইভ লোকেশন দিন
+              </>
+            )}
+          </button>
+        </div>
+
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Full Name</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">আপনার নাম</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-600 border border-gray-100"
+              placeholder="আপনার পুরো নাম লিখুন"
+              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200"
             />
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name}</p>}
           </div>
+
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Mobile Number</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">মোবাইল নম্বর</label>
             <input
               type="tel"
               value={mobile}
               onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              placeholder="10-digit mobile number"
-              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-600 border border-gray-100"
+              placeholder="১০ সংখ্যার মোবাইল নম্বর"
+              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200"
             />
-            {errors.mobile && <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>}
+            {errors.mobile && <p className="text-xs text-rose-500 mt-1">{errors.mobile}</p>}
           </div>
+
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Full Delivery Address</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">ডেলিভারির সম্পূর্ণ ঠিকানা</label>
             <textarea
               value={address}
               onChange={e => setAddress(e.target.value)}
-              placeholder="House no, street, area, city, state"
+              placeholder="বাড়ি/ফ্ল্যাট নম্বর, রাস্তা, এলাকার নাম ও ল্যান্ডমার্ক"
               rows={3}
-              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-600 border border-gray-100 resize-none"
+              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200 resize-none"
             />
-            {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
+            {errors.address && <p className="text-xs text-rose-500 mt-1">{errors.address}</p>}
           </div>
+
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">PIN Code</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">পিন কোড (PIN Code)</label>
             <input
               type="tel"
               value={pinCode}
               onChange={e => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit PIN code"
-              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-600 border border-gray-100"
+              placeholder="৬ সংখ্যার পিন কোড"
+              className="w-full px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200"
             />
-            {errors.pinCode && <p className="text-xs text-red-500 mt-1">{errors.pinCode}</p>}
+            {errors.pinCode && <p className="text-xs text-rose-500 mt-1">{errors.pinCode}</p>}
           </div>
         </div>
       </div>
 
-      {/* Payment method */}
-      <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <h3 className="font-bold text-gray-900 mb-3">Payment Method</h3>
-        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border-2 border-green-600">
-          <Banknote size={22} className="text-green-700" />
-          <div>
-            <p className="font-semibold text-gray-900 text-sm">Cash on Delivery</p>
-            <p className="text-xs text-gray-500">Pay when your order arrives</p>
-          </div>
-          <div className="ml-auto w-5 h-5 rounded-full border-2 border-green-600 flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-full bg-green-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Order summary */}
-      <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <h3 className="font-bold text-gray-900 mb-3">Order Summary</h3>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-          {items.map(item => (
-            <div key={item.product.id} className="flex items-center gap-2 text-sm">
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                <img src={item.product.image_url || ''} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-gray-700 font-medium truncate">{item.product.name}</p>
-                <p className="text-xs text-gray-400">{item.quantity} x {formatPrice(item.product.selling_price)}</p>
-              </div>
-              <span className="font-medium text-gray-900">{formatPrice(item.product.selling_price * item.quantity)}</span>
+      {/* Payment methods */}
+      <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
+        <h3 className="font-bold text-gray-900 mb-3">পেমেন্ট পদ্ধতি নির্বাচন করুন</h3>
+        
+        <div className="space-y-3">
+          {/* COD Option */}
+          <div
+            onClick={() => setPaymentMethod('COD')}
+            className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+              paymentMethod === 'COD'
+                ? 'bg-emerald-50/60 border-emerald-600'
+                : 'border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <Banknote size={22} className={paymentMethod === 'COD' ? 'text-emerald-700' : 'text-gray-500'} />
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">ক্যাশ অন ডেলিভারি (COD)</p>
+              <p className="text-xs text-gray-500">অর্ডার হাতে পেয়ে নগদ টাকায় পেমেন্ট করুন</p>
             </div>
-          ))}
-        </div>
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Subtotal</span>
-            <span className="font-medium">{formatPrice(getSubtotal())}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Delivery charge</span>
-            <span className="font-medium">
-              {getDeliveryCharge() === 0 ? <span className="text-green-600">FREE</span> : formatPrice(getDeliveryCharge())}
-            </span>
-          </div>
-          <div className="pt-2 border-t border-gray-100 flex justify-between">
-            <span className="font-bold text-gray-900">Total</span>
-            <span className="font-bold text-green-700 text-lg">{formatPrice(getTotal())}</span>
-          </div>
-        </div>
-      </div>
+            <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              paymentMethod === 'COD' ? 'border-emerald-600' : 'border-gray-300'
+            }`}>
+              {paymentMethod === 'COD' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />}
 
-      {errors.form && (
-        <p className="text-sm text-red-500 mt-3 text-center">{errors.form}</p>
-      )}
-
-      <button
-        onClick={handlePlaceOrder}
-        disabled={placing}
-        className="mt-4 w-full py-3.5 rounded-xl font-semibold text-sm bg-green-700 text-white hover:bg-green-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-      >
-        {placing ? (
-          <>
-            <Loader2 size={18} className="animate-spin" /> Placing Order...
-          </>
-        ) : (
-          `Place Order • ${formatPrice(getTotal())}`
-        )}
-      </button>
-    </div>
-  );
-}
+        
