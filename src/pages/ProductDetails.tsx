@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Shield, Truck, Check } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star, Shield, Truck, Check, Scale, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Product, Category } from '@/types';
 import { formatPrice, calculateDiscount } from '@/lib/format';
@@ -42,7 +42,7 @@ export function ProductDetails() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-green-700 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-emerald-700 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -50,150 +50,90 @@ export function ProductDetails() {
   if (!product) {
     return (
       <div className="text-center py-20 text-gray-500">
-        <p className="text-lg font-medium">Product not found</p>
-        <Link to="/products" className="text-green-700 font-semibold mt-2 inline-block">Browse all products</Link>
+        <p className="text-lg font-medium">পণ্যটি পাওয়া যায়নি</p>
+        <Link to="/products" className="text-emerald-700 font-semibold mt-2 inline-block">
+          সব পণ্য দেখুন
+        </Link>
       </div>
     );
   }
 
   const discount = calculateDiscount(product.mrp, product.selling_price);
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+
+  const displayWeight = product.net_weight
+    ? `${product.net_weight} ${product.weight_unit === 'kg' ? 'কেজি' : product.weight_unit === 'gm' ? 'গ্রাম' : product.weight_unit || ''}`
+    : product.pack_size;
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     addToCart(product, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) return;
     addToCart(product, quantity);
     navigate('/cart');
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-4">
+    <div className="max-w-4xl mx-auto pb-6">
       <div className="px-4 py-3">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-600 text-sm font-medium">
-          <ArrowLeft size={18} /> Back
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm font-semibold hover:text-gray-900 transition-colors">
+          <ArrowLeft size={16} /> পেছনে যান
         </button>
       </div>
 
       <div className="px-4">
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-          <div className="relative aspect-square bg-gray-50">
+        <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-xs">
+          <div className="relative aspect-square md:aspect-video max-h-96 bg-gray-50 flex items-center justify-center">
             <img
-              src={product.image_url || ''}
+              src={product.image_url || 'https://images.pexels.com/photos/31280796/pexels-photo-31280796.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale opacity-60' : ''}`}
             />
             {discount > 0 && (
-              <span className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
-                {discount}% OFF
+              <span className="absolute top-4 left-4 bg-rose-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                {discount}% ছাড়
+              </span>
+            )}
+            {isOutOfStock && (
+              <span className="absolute top-4 right-4 bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+                স্টক শেষ
               </span>
             )}
           </div>
 
-          <div className="p-5">
-            {category && (
-              <Link
-                to={`/products?category=${category.slug}`}
-                className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full inline-block"
-              >
-                {category.name}
-              </Link>
-            )}
-            <h1 className="text-xl font-bold text-gray-900 mt-2">{product.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">{product.short_description}</p>
-
-            <div className="flex items-baseline gap-3 mt-3">
-              <span className="text-2xl font-bold text-green-700">{formatPrice(product.selling_price)}</span>
-              {discount > 0 && (
-                <>
-                  <span className="text-base text-gray-400 line-through">{formatPrice(product.mrp)}</span>
-                  <span className="text-sm font-semibold text-red-500">Save {formatPrice(product.mrp - product.selling_price)}</span>
-                </>
+          <div className="p-5 md:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              {category && (
+                <Link
+                  to={`/products?category=${category.slug}`}
+                  className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full inline-block hover:bg-emerald-100 transition-colors"
+                >
+                  {category.name}
+                </Link>
+              )}
+              {product.is_best_seller && (
+                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                  <Star size={12} fill="currentColor" /> সেরা পছন্দ
+                </span>
+              )}
+              {product.is_on_offer && (
+                <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                  <Sparkles size={12} /> বিশেষ অফার
+                </span>
               )}
             </div>
-            <p className="text-xs text-gray-400 mt-1">Pack size: {product.pack_size}</p>
 
-            {product.is_best_seller && (
-              <div className="mt-3 inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full text-sm font-medium">
-                <Star size={14} fill="currentColor" /> Best Seller
-              </div>
+            <h1 className="text-xl md:text-2xl font-black text-gray-900 mt-2.5">{product.name}</h1>
+            {product.short_description && (
+              <p className="text-xs md:text-sm text-gray-500 mt-1">{product.short_description}</p>
             )}
 
-            {product.description && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <h3 className="font-semibold text-gray-900 text-sm mb-1.5">Description</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
-              </div>
-            )}
-
-            {/* Quantity selector */}
-            <div className="mt-5 flex items-center gap-4">
-              <span className="text-sm font-semibold text-gray-700">Quantity</span>
-              <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-                <button
-                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="w-9 h-9 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-700 active:scale-95 transition-transform"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="w-10 text-center font-bold text-gray-900">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(q => q + 1)}
-                  className="w-9 h-9 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-700 active:scale-95 transition-transform"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 border-2 ${
-                  added
-                    ? 'border-green-600 bg-green-50 text-green-700'
-                    : 'border-green-700 text-green-700 hover:bg-green-50'
-                }`}
-              >
-                {added ? (
-                  <>
-                    <Check size={18} /> Added to Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart size={18} /> Add to Cart
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleBuyNow}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-green-700 text-white hover:bg-green-800 active:scale-95 transition-all"
-              >
-                Buy Now
-              </button>
-            </div>
-
-            {/* Trust badges */}
-            <div className="mt-5 pt-4 border-t border-gray-100 grid grid-cols-3 gap-2">
-              <div className="flex flex-col items-center text-center gap-1">
-                <Truck size={20} className="text-green-600" />
-                <span className="text-[11px] text-gray-500 font-medium">Fast Delivery</span>
-              </div>
-              <div className="flex flex-col items-center text-center gap-1">
-                <Shield size={20} className="text-green-600" />
-                <span className="text-[11px] text-gray-500 font-medium">Pure Quality</span>
-              </div>
-              <div className="flex flex-col items-center text-center gap-1">
-                <Check size={20} className="text-green-600" />
-                <span className="text-[11px] text-gray-500 font-medium">Cash on Delivery</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+            {/* ওজন ব্যাজ */}
+            {displayWeight && (
+              <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50/
+          
