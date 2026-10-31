@@ -18,6 +18,8 @@ export interface Product {
   mrp: number;
   selling_price: number;
   pack_size: string | null;
+  net_weight?: number;
+  weight_unit?: 'gm' | 'kg' | 'piece' | string;
   is_featured: boolean;
   is_best_seller: boolean;
   is_on_offer: boolean;
@@ -37,6 +39,8 @@ export interface Customer {
   mobile: string;
   address: string;
   pin_code: string;
+  latitude?: number;
+  longitude?: number;
   created_at: string;
 }
 
@@ -49,25 +53,6 @@ export interface OrderItem {
   product: Product | null;
 }
 
-export interface Order {
-  id: string;
-  order_number: string;
-  customer_id: string | null;
-  customer_name: string;
-  mobile_number: string;
-  address: string;
-  pin_code: string;
-  subtotal: number;
-  delivery_charge: number;
-  total: number;
-  payment_method: string;
-  status: string;
-  items_json: OrderItemJson[] | null;
-  created_at: string;
-  customer: Customer | null;
-  order_items: OrderItem[];
-}
-
 export interface OrderItemJson {
   product_id: string;
   product_name: string;
@@ -78,3 +63,35 @@ export interface OrderItemJson {
   quantity: number;
   line_total: number;
 }
+
+export interface Order {
+  id: string;
+  order_number: string;
+  customer_id: string | null;
+  customer_name: string;
+  mobile_number: string;
+  address: string;
+  pin_code: string;
+  latitude?: number;
+  longitude?: number;
+  subtotal: number;
+  delivery_charge: number;
+  total: number;
+  payment_method: string;
+  payment_status?: 'PENDING' | 'VERIFIED' | 'FAILED' | string;
+  payment_ref_id?: string | null;
+  status: string;
+  delivery_partner_id?: string | null;
+  delivery_partner_name?: string | null;
+  items_json: OrderItemJson[] | null;
+  created_at: string;
+  customer: Customer | null;
+  order_items: OrderItem[];
+}
+
+export interface ServiceablePinCode {
+  pin_code: string;
+  area_name: string;
+  delivery_charge: number;
+  is_active: boolean;
+  }
