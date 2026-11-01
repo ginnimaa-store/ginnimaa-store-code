@@ -85,5 +85,72 @@ export function AdminDashboard() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1
-            
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+            >
+              <Store className="w-4 h-4" />
+              <span>স্টোর দেখুন</span>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>লগআউট</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation Tabs */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setTab('overview')}
+            className={`py-3 px-4 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
+              tab === 'overview'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            ওভারভিউ
+          </button>
+          <button
+            onClick={() => setTab('orders')}
+            className={`py-3 px-4 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
+              tab === 'orders'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            অর্ডার সমূহ
+          </button>
+          <button
+            onClick={() => setTab('products')}
+            className={`py-3 px-4 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
+              tab === 'products'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            প্রোডাক্ট তালিকা
+          </button>
+          <button
+            onClick={() => setTab('settings')}
+            className={`py-3 px-4 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
+              tab === 'settings'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            সেটিংস
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {tab === 'overview' && (
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">স্টোর ওভারভিউ</h1>
+            {loadingMetrics ? (
+        
