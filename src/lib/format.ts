@@ -17,3 +17,7 @@ export function generateOrderNumber(): string {
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `${prefix}${timestamp}${random}`;
 }
+
+export function generateOTP(): string {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}

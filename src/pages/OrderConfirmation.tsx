@@ -1,24 +1,43 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, Package, MapPin, Phone, Home, ShoppingBag, MessageCircle } from 'lucide-react';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { CheckCircle, Package, MapPin, Phone, Home, ShoppingBag, MessageCircle, KeyRound } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Order, OrderItemJson } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { fetchWhatsAppNumber } from '@/lib/settings';
 import { buildOrderMessage, buildWhatsAppUrl, normalizeWhatsAppNumber } from '@/lib/whatsapp';
 
-interface DisplayItem {
+interface ConfirmOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  mobile_number: string;
+  address: string;
+  pin_code: string;
+  subtotal: number;
+  delivery_charge: number;
+  total: number;
+  payment_method: string;
+  payment_status: string;
+  status: string;
+  delivery_status: string;
+  delivery_otp: string;
+  created_at: string;
+}
+
+interface ConfirmItem {
   product_name: string;
   product_image: string | null;
   pack_size: string | null;
   quantity: number;
-  line_total: number;
+  price: number;
 }
 
 export function OrderConfirmation() {
   const { id } = useParams<{ id: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [items, setItems] = useState<DisplayItem[]>([]);
+  const [searchParams] = useSearchParams();
+  const otp = searchParams.get('otp') || '';
+  const [order, setOrder] = useState<ConfirmOrder | null>(null);
+  const [items, setItems] = useState<ConfirmItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState('');
 
@@ -30,47 +49,33 @@ export function OrderConfirmation() {
 
   useEffect(() => {
     (async () => {
-      if (!id) return;
+      if (!id || !otp) {
+        setLoading(false);
+        return;
+      }
       const { data: orderData } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          customer:customers(*),
-          order_items:order_items(*, product:products(*))
-        `)
-        .eq('id', id)
-        .maybeSingle();
+        .rpc('lookup_order_by_otp', { p_order_id: id, p_otp: otp });
 
-      if (orderData) {
-        setOrder(orderData as unknown as Order);
+      if (orderData && orderData.length > 0) {
+        const o = orderData[0];
+        setOrder(o as unknown as ConfirmOrder);
 
-        // Build display items from order_items with product join
-        const displayItems: DisplayItem[] = (orderData.order_items || []).map((oi: { quantity: number; price: number; product: { name: string; image_url: string | null; pack_size: string | null } | null }) => ({
-          product_name: oi.product?.name || 'Product',
-          product_image: oi.product?.image_url || null,
-          pack_size: oi.product?.pack_size || null,
-          quantity: oi.quantity,
-          line_total: oi.price * oi.quantity,
-        }));
+        const { data: itemData } = await supabase
+          .rpc('lookup_order_items_by_otp', { p_order_id: id, p_otp: otp });
 
-        // Fall back to items_json if order_items is empty (legacy orders)
-        if (displayItems.length === 0 && orderData.items_json) {
-          const legacy = orderData.items_json as unknown as OrderItemJson[];
-          setItems(legacy.map((item) => ({
-            product_name: item.product_name,
+        if (itemData && itemData.length > 0) {
+          setItems((itemData as unknown as ConfirmItem[]).map(item => ({
+            product_name: item.product_name || 'Product',
             product_image: item.product_image,
             pack_size: item.pack_size,
             quantity: item.quantity,
-            line_total: item.line_total,
+            price: Number(item.price),
           })));
-        } else {
-          setItems(displayItems);
         }
       }
-
       setLoading(false);
     })();
-  }, [id]);
+  }, [id, otp]);
 
   if (loading) {
     return (
@@ -103,7 +108,12 @@ export function OrderConfirmation() {
             total: Number(order.total),
             payment_method: order.payment_method || 'Cash on Delivery',
           },
-          items,
+          items.map(i => ({
+            product_name: i.product_name,
+            pack_size: i.pack_size,
+            quantity: i.quantity,
+            line_total: i.price * i.quantity,
+          })),
         ),
       )
     : null;
@@ -119,10 +129,16 @@ export function OrderConfirmation() {
         <p className="text-sm text-gray-500 mt-1">Thank you for shopping with GINNIMAA</p>
       </div>
 
-      {/* Order ID */}
+      {/* Order ID + OTP */}
       <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100 mb-4">
         <p className="text-xs text-gray-500 font-medium">Order ID</p>
         <p className="text-lg font-bold text-green-700 tracking-wide">{order.order_number}</p>
+        <div className="mt-2 pt-2 border-t border-green-100">
+          <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-1">
+            <KeyRound size={12} /> ডেলিভারি OTP (কুরিয়ারকে দেখাবেন)
+          </p>
+          <p className="text-2xl font-black text-green-800 tracking-[0.3em] mt-1">{order.delivery_otp}</p>
+        </div>
       </div>
 
       {whatsappUrl && (
@@ -162,7 +178,7 @@ export function OrderConfirmation() {
                 <p className="font-medium text-sm text-gray-900 truncate">{item.product_name}</p>
                 <p className="text-xs text-gray-400">{item.pack_size} • Qty: {item.quantity}</p>
               </div>
-              <span className="font-medium text-sm text-gray-900">{formatPrice(item.line_total)}</span>
+              <span className="font-medium text-sm text-gray-900">{formatPrice(item.price * item.quantity)}</span>
             </div>
           ))}
         </div>

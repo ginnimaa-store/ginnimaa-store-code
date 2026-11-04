@@ -90,8 +90,20 @@ export interface Order {
 }
 
 export interface ServiceablePinCode {
+  id: string;
   pin_code: string;
   area_name: string;
   delivery_charge: number;
   is_active: boolean;
-  }
+  created_at: string;
+}
+
+export interface DeliveryPartner {
+  id: string;
+  user_id: string | null;
+  name: string;
+  phone: string | null;
+  is_active: boolean;
+  vehicle_number: string | null;
+  created_at: string;
+}

@@ -11,6 +11,11 @@ export function ProductCard({ product }: { product: Product }) {
   const discount = calculateDiscount(product.mrp, product.selling_price);
   const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
+  // Parse available unit options
+  const unitOptions: string[] = product.unit_options
+    ? (typeof product.unit_options === 'string' ? JSON.parse(product.unit_options as string) : product.unit_options as string[])
+    : [];
+
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -20,7 +25,6 @@ export function ProductCard({ product }: { product: Product }) {
     setTimeout(() => setAdded(false), 1200);
   };
 
-  // ওজনের মাপ বা প্যাক সাইজ প্রস্তুত করা
   const displayWeight = product.net_weight
     ? `${product.net_weight} ${product.weight_unit === 'kg' ? 'কেজি' : product.weight_unit === 'gm' ? 'গ্রাম' : product.weight_unit || ''}`
     : product.pack_size;
@@ -39,12 +43,12 @@ export function ProductCard({ product }: { product: Product }) {
             isOutOfStock ? 'grayscale opacity-60' : ''
           }`}
         />
-        
-        {/* ডিসকাউন্ট ও অফার ব্যাজ */}
+
+        {/* Discount & offer badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
           {discount > 0 && (
             <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-              {discount}% ছাড়
+              {discount}% ছাড়
             </span>
           )}
           {product.is_on_offer && (
@@ -54,7 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* বেস্ট সেলার ও স্টক আউট ব্যাজ */}
+        {/* Best seller & out of stock badges */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
           {product.is_best_seller && (
             <span className="bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs">
@@ -73,12 +77,12 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
           {product.name}
         </h3>
-        
+
         {product.short_description && (
           <p className="text-xs text-gray-500 mt-1 line-clamp-1">{product.short_description}</p>
         )}
 
-        {/* প্যাক সাইজ বা ওজনের ডিসপ্লে */}
+        {/* Weight display */}
         {displayWeight && (
           <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-800 bg-emerald-50 w-fit px-2 py-0.5 rounded-md">
             <Scale size={11} />
@@ -86,7 +90,18 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* দাম ও MRP */}
+        {/* Available weight options */}
+        {unitOptions.length > 0 && (
+          <div className="flex gap-1 mt-1.5 flex-wrap">
+            {unitOptions.slice(0, 3).map(opt => (
+              <span key={opt} className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                {opt}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Price & MRP */}
         <div className="flex items-baseline gap-2 mt-2 pt-1">
           <span className="text-base md:text-lg font-extrabold text-emerald-800">
             {formatPrice(product.selling_price)}
@@ -98,7 +113,12 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* বাটন */}
+        {/* Stock status */}
+        {!isOutOfStock && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
+          <p className="text-[10px] text-amber-600 font-medium mt-0.5">শুধু {product.stock}টি বাকি!</p>
+        )}
+
+        {/* Add button */}
         <button
           onClick={handleAdd}
           disabled={isOutOfStock}
@@ -113,7 +133,7 @@ export function ProductCard({ product }: { product: Product }) {
           {isOutOfStock ? (
             'উপলব্ধ নেই'
           ) : added ? (
-            'যোগ হয়েছে!'
+            'যোগ হয়েছে!'
           ) : (
             <>
               <Plus size={16} /> কার্টে যোগ করুন
@@ -123,5 +143,4 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
     </Link>
   );
-        }
-        
+}
