@@ -153,4 +153,8 @@ export function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-6">স্টোর ওভারভিউ</h1>
             {loadingMetrics ? (
-        
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>
+            ) : (
+          
