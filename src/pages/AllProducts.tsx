@@ -101,5 +101,14 @@ export function AllProducts() {
         </div>
         <button
           onClick={() => setShowFilter(!showFilter)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-
-                
+          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition"
+        >
+          {showFilter ? <X className="w-4 h-4" /> : <SlidersHorizontal className="w-4 h-4" />}
+          <span>{showFilter ? 'ফিল্টার বন্ধ' : 'ফিল্টার'}</span>
+        </button>
+      </div>
+
+      {/* Filter drawer / section */}
+      {showFilter && (
+        <div className="mb-6 p
+      
