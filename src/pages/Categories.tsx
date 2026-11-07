@@ -1,56 +1,62 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Layers } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
 
 export function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    async function loadCategories() {
       try {
-        const [catRes, prodRes] = await Promise.all([
-          supabase.from('categories').select('*').order('display_order'),
-          supabase.from('products').select('category_id').eq('active', true),
-        ]);
-
-        const dbCategories = catRes.data || [];
-        setCategories(dbCategories);
-
-        const c: Record<string, number> = {};
-        (prodRes.data || []).forEach((p: { category_id: string | null }) => {
-          if (p.category_id) c[p.category_id] = (c[p.category_id] || 0) + 1;
-        });
-        setCounts(c);
+        const { data } = await supabase
+          .from('categories')
+          .select('*')
+          .order('display_order');
+        setCategories(data || []);
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
-    })();
+    }
+    loadCategories();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-emerald-700 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-6xl mx-auto px-4 py-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Layers className="text-emerald-700" size={22} />
-        <h1 className="text-xl font-bold text-gray-900">সব ক্যাটাগরি সমূহ</h1>
-      </div>
-
-      {categories.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 p-8">
-          <p className="text-base font-semibold text-gray-800">কোনো ক্যাটাগরি পাওয়া যায়নি</p>
-          <p className="text-xs text-gray-400 mt-1">অ্যাডমিন প্যানেল থেকে নতুন ক্যাটাগরি তৈরি করুন</p>
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">সকল ক্যাটাগরি</h1>
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
         </div>
-          
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/products?category=${cat.slug}`}
+              className="group bg-white p-4 rounded-xl border border-gray-100 shadow-xs hover:border-emerald-300 hover:shadow-md transition text-center"
+            >
+              {cat.image_url ? (
+                <img
+                  src={cat.image_url}
+                  alt={cat.name}
+                  className="w-16 h-16 mx-auto object-contain mb-3 group-hover:scale-105 transition"
+                />
+              ) : (
+                <div className="w-16 h-16 mx-auto bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center font-bold text-lg mb-3">
+                  {cat.name.charAt(0)}
+                </div>
+              )}
+              <h3 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition text-sm">
+                {cat.name}
+              </h3>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+              }
