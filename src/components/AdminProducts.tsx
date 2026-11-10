@@ -1,26 +1,24 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { formatPrice } from '@/lib/format';
-import type { Product } from '@/types';
+import { supabase } from '../lib/supabase';
+import { formatPrice } from '../lib/format';
 
 export function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      // categories টেবিল জয়েন বাদ দিয়ে সরাসরি products লোড করা যাতে কোনো রিলেশন সমস্যা না করে
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('লোড এরর:', error);
+        console.error('Fetch error:', error);
       } else {
         setProducts(data || []);
       }
@@ -36,7 +34,7 @@ export function AdminProducts() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('আপনি কি নিশ্চিত যে পণ্যটি মুছে ফেলতে চান?')) return;
+    if (!window.confirm('আপনি কি নিশ্চিত যে পণ্যটি মুছে ফেলতে চান?')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) {
       alert('পণ্য মুছতে সমস্যা হয়েছে: ' + error.message);
@@ -47,35 +45,30 @@ export function AdminProducts() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProduct?.name || !editingProduct?.price) {
-      alert('দয়া করে পণ্যের নাম ও মূল্য পূরণ করুন।');
+    if (!editingProduct?.name || editingProduct?.price === '') {
+      alert('দয়া করে পণ্যের নাম ও সঠিক মূল্য লিখুন।');
       return;
     }
 
     setSaving(true);
     try {
-      // ডাটাবেসে সেভ করার জন্য শুধু প্রয়োজনীয় ফিল্ড পাঠানো
-      const productPayload: Record<string, any> = {
-        name: editingProduct.name.trim(),
+      const payload: any = {
+        name: String(editingProduct.name).trim(),
         price: Number(editingProduct.price),
         active: true,
       };
 
-      if (editingProduct.description) productPayload.description = editingProduct.description;
-      if (editingProduct.image_url) productPayload.image_url = editingProduct.image_url;
-      if (editingProduct.weight) productPayload.weight = editingProduct.weight;
-
       if (editingProduct.id) {
         const { error } = await supabase
           .from('products')
-          .update(productPayload)
+          .update(payload)
           .eq('id', editingProduct.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('products')
-          .insert([productPayload]);
+          .insert([payload]);
 
         if (error) throw error;
       }
@@ -84,8 +77,7 @@ export function AdminProducts() {
       setEditingProduct(null);
       await loadData();
     } catch (err: any) {
-      console.error('সেভ করতে সমস্যা:', err);
-      alert('সংরক্ষণ ব্যর্থ হয়েছে: ' + (err.message || 'অজানা ত্রুটি'));
+      alert('সংরক্ষণ ব্যর্থ হয়েছে: ' + (err?.message || 'ডাটাবেস এরর'));
     } finally {
       setSaving(false);
     }
@@ -96,7 +88,7 @@ export function AdminProducts() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">প্রোডাক্ট তালিকা</h2>
         <button
-          onClick={() => setEditingProduct({ name: '', price: 0 })}
+          onClick={() => setEditingProduct({ name: '', price: '' })}
           className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold"
         >
           <Plus className="w-4 h-4" /> নতুন প্রোডাক্ট
@@ -105,7 +97,7 @@ export function AdminProducts() {
 
       {editingProduct && (
         <form onSubmit={handleSave} className="mb-6 p-4 bg-gray-50 rounded-xl border flex flex-col gap-3">
-          <h3 className="font-bold text-sm">
+          <h3 className="font-bold text-sm text-gray-800">
             {editingProduct.id ? 'প্রোডাক্ট এডিট' : 'নতুন প্রোডাক্ট যুক্ত করুন'}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -116,7 +108,7 @@ export function AdminProducts() {
                 placeholder="পণ্যের নাম (যেমন: রুই মাছ)"
                 value={editingProduct.name || ''}
                 onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                className="w-full p-2 border rounded-lg text-sm bg-white"
+                className="w-full p-2 border rounded-lg text-sm bg-white text-gray-900"
                 required
               />
             </div>
@@ -125,9 +117,9 @@ export function AdminProducts() {
               <input
                 type="number"
                 placeholder="মূল্য (যেমন: 250)"
-                value={editingProduct.price || ''}
-                onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                className="w-full p-2 border rounded-lg text-sm bg-white"
+                value={editingProduct.price}
+                onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value === '' ? '' : Number(e.target.value) })}
+                className="w-full p-2 border rounded-lg text-sm bg-white text-gray-900"
                 required
               />
             </div>
@@ -136,7 +128,7 @@ export function AdminProducts() {
             <button
               type="button"
               onClick={() => setEditingProduct(null)}
-              className="px-3 py-1.5 text-xs border rounded-lg bg-white"
+              className="px-3 py-1.5 text-xs border rounded-lg bg-white text-gray-700"
               disabled={saving}
             >
               বাতিল
@@ -153,7 +145,7 @@ export function AdminProducts() {
       )}
 
       {loading ? (
-        <div className="text-center py-12">লোড হচ্ছে...</div>
+        <div className="text-center py-12 text-gray-500">লোড হচ্ছে...</div>
       ) : products.length === 0 ? (
         <div className="text-center py-12 text-gray-500 text-sm">কোনো প্রোডাক্ট পাওয়া যায়নি।</div>
       ) : (
@@ -173,10 +165,10 @@ export function AdminProducts() {
                   <td className="py-3 px-3 font-semibold text-emerald-700">{formatPrice(p.price)}</td>
                   <td className="py-3 px-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setEditingProduct(p)} className="p-1 hover:text-blue-600">
+                      <button onClick={() => setEditingProduct({ id: p.id, name: p.name, price: p.price })} className="p-1 text-gray-500 hover:text-blue-600">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1 hover:text-red-600">
+                      <button onClick={() => handleDelete(p.id)} className="p-1 text-gray-500 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -189,5 +181,4 @@ export function AdminProducts() {
       )}
     </div>
   );
-      }
-            
+}
