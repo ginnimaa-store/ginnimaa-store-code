@@ -1,184 +1,311 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { formatPrice } from '@/lib/format';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { Plus, Trash2, Edit, Save, X, Image as ImageIcon, Percent } from 'lucide-react';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  mrp: number;
+  category: string;
+  image_url: string;
+  description: string;
+  stock: number;
+}
 
 export function AdminProducts() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
-  const loadData = async () => {
-    setLoading(true);
+  // ফর্মের স্টেট
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [mrp, setMrp] = useState('');
+  const [category, setCategory] = useState('Spices');
+  const [imageUrl, setImageUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [stock, setStock] = useState('10');
+
+  // ক্যাটাগরি তালিকা
+  const categories = ['Spices', 'Grocery', 'Pickles', 'Snacks', 'Beverages'];
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  async function fetchProducts() {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Fetch error:', error);
-      } else {
-        setProducts(data || []);
-      }
-    } catch (e) {
-      console.error(e);
+      setLoading(true);
+      const { data, error } = await supabase.from('products').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      if (data) setProducts(data);
+    } catch (error: any) {
+      console.error('Error fetching products:', error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('আপনি কি নিশ্চিত যে পণ্যটি মুছে ফেলতে চান?')) return;
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) {
-      alert('পণ্য মুছতে সমস্যা হয়েছে: ' + error.message);
-      return;
+  // ডিসকাউন্ট পার্সেন্টেজ স্বয়ংক্রিয় হিসাব করার ফাংশন
+  const calculateDiscount = (sellingPrice: string, mrpPrice: string) => {
+    const sPrice = parseFloat(sellingPrice);
+    const mPrice = parseFloat(mrpPrice);
+    if (!isNaN(sPrice) && !isNaN(mPrice) && mPrice > sPrice && mPrice > 0) {
+      const discount = ((mPrice - sPrice) / mPrice) * 100;
+      return Math.round(discount);
     }
-    loadData();
+    return 0;
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const discountPercent = calculateDiscount(price, mrp);
+
+  const resetForm = () => {
+    setName('');
+    setPrice('');
+    setMrp('');
+    setCategory('Spices');
+    setImageUrl('');
+    setDescription('');
+    setStock('10');
+    setIsEditing(false);
+    setCurrentId(null);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProduct?.name || editingProduct?.price === '') {
-      alert('দয়া করে পণ্যের নাম ও সঠিক মূল্য লিখুন।');
-      return;
-    }
-
-    setSaving(true);
     try {
-      const payload: any = {
-        name: String(editingProduct.name).trim(),
-        price: Number(editingProduct.price),
-        active: true,
+      const productData = {
+        name,
+        price: parseFloat(price) || 0,
+        mrp: parseFloat(mrp) || parseFloat(price) || 0,
+        category,
+        image_url: imageUrl || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=500&q=80',
+        description,
+        stock: parseInt(stock) || 10
       };
 
-      if (editingProduct.id) {
-        const { error } = await supabase
-          .from('products')
-          .update(payload)
-          .eq('id', editingProduct.id);
-
+      if (isEditing && currentId) {
+        const { error } = await supabase.from('products').update(productData).eq('id', currentId);
         if (error) throw error;
+        alert('পণ্য সফলভাবে আপডেট করা হয়েছে!');
       } else {
-        const { error } = await supabase
-          .from('products')
-          .insert([payload]);
-
+        const { error } = await supabase.from('products').insert([productData]);
         if (error) throw error;
+        alert('পণ্য সফলভাবে সংরক্ষিত হয়েছে!');
       }
 
-      alert('পণ্য সফলভাবে সংরক্ষিত হয়েছে!');
-      setEditingProduct(null);
-      await loadData();
-    } catch (err: any) {
-      alert('সংরক্ষণ ব্যর্থ হয়েছে: ' + (err?.message || 'ডাটাবেস এরর'));
-    } finally {
-      setSaving(false);
+      resetForm();
+      fetchProducts();
+    } catch (error: any) {
+      alert('সংরক্ষণ ব্যর্থ হয়েছে: ' + error.message);
+    }
+  };
+
+  const handleEdit = (product: Product) => {
+    setName(product.name);
+    setPrice(product.price.toString());
+    setMrp(product.mrp?.toString() || product.price.toString());
+    setCategory(product.category || 'Spices');
+    setImageUrl(product.image_url || '');
+    setDescription(product.description || '');
+    setStock(product.stock?.toString() || '10');
+    setCurrentId(product.id);
+    setIsEditing(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('আপনি কি নিশ্চিত এই পণ্যটি ডিলিট করতে চান?')) {
+      try {
+        const { error } = await supabase.from('products').delete().eq('id', id);
+        if (error) throw error;
+        fetchProducts();
+      } catch (error: any) {
+        alert('ডিলিট করতে সমস্যা হয়েছে: ' + error.message);
+      }
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border p-4 sm:p-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto font-sans">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">প্রোডাক্ট তালিকা</h2>
-        <button
-          onClick={() => setEditingProduct({ name: '', price: '' })}
-          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold"
-        >
-          <Plus className="w-4 h-4" /> নতুন প্রোডাক্ট
-        </button>
+        <h2 className="text-2xl font-bold text-gray-800">প্রোডাক্ট ম্যানেজমেন্ট</h2>
       </div>
 
-      {editingProduct && (
-        <form onSubmit={handleSave} className="mb-6 p-4 bg-gray-50 rounded-xl border flex flex-col gap-3">
-          <h3 className="font-bold text-sm text-gray-800">
-            {editingProduct.id ? 'প্রোডাক্ট এডিট' : 'নতুন প্রোডাক্ট যুক্ত করুন'}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">পণ্যের নাম *</label>
-              <input
-                type="text"
-                placeholder="পণ্যের নাম (যেমন: রুই মাছ)"
-                value={editingProduct.name || ''}
-                onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                className="w-full p-2 border rounded-lg text-sm bg-white text-gray-900"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">মূল্য (Price) *</label>
-              <input
-                type="number"
-                placeholder="মূল্য (যেমন: 250)"
-                value={editingProduct.price}
-                onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value === '' ? '' : Number(e.target.value) })}
-                className="w-full p-2 border rounded-lg text-sm bg-white text-gray-900"
-                required
-              />
-            </div>
+      {/* প্রোডাক্ট ফর্ম */}
+      <form onSubmit={handleSaveProduct} className="bg-white p-4 md:p-6 rounded-xl shadow-md mb-8 border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          {isEditing ? 'প্রোডাক্ট এডিট করুন' : '+ নতুন প্রোডাক্ট যোগ করুন'}
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">পণ্যের নাম *</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="যেমন: খাঁটি সর্ষের তেল"
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+            />
           </div>
-          <div className="flex justify-end gap-2 mt-2">
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">ক্যাটাগরি নির্বাচন করুন *</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">মূল দাম (Selling Price) *</label>
+            <input
+              type="number"
+              required
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="যেমন: 250"
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-600">পূর্বের দাম (MRP) *</label>
+              {discountPercent > 0 && (
+                <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Percent size={12} /> {discountPercent}% ছাড় (Discount)
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              required
+              value={mrp}
+              onChange={(e) => setMrp(e.target.value)}
+              placeholder="যেমন: 300"
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">ছবির লিংক (Image URL)</label>
+            <input
+              type="text"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">স্টক পরিমাণ (Stock)</label>
+            <input
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              placeholder="10"
+              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-600 mb-1">পণ্যের বিবরণ (Description)</label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="পণ্য সম্পর্কে কিছু লিখুন..."
+            className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+          ></textarea>
+        </div>
+
+        <div className="mt-4 flex gap-3">
+          <button
+            type="submit"
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition"
+          >
+            <Save size={18} /> {isEditing ? 'আপডেট করুন' : 'সংরক্ষণ করুন'}
+          </button>
+          {isEditing && (
             <button
               type="button"
-              onClick={() => setEditingProduct(null)}
-              className="px-3 py-1.5 text-xs border rounded-lg bg-white text-gray-700"
-              disabled={saving}
+              onClick={resetForm}
+              className="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition"
             >
-              বাতিল
+              <X size={18} /> বাতিল
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-1.5 text-xs bg-emerald-600 text-white font-semibold rounded-lg disabled:opacity-50"
-            >
-              {saving ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">লোড হচ্ছে...</div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 text-sm">কোনো প্রোডাক্ট পাওয়া যায়নি।</div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
-              <tr>
-                <th className="py-3 px-3">নাম</th>
-                <th className="py-3 px-3">মূল্য</th>
-                <th className="py-3 px-3 text-right">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {products.map((p) => (
-                <tr key={p.id}>
-                  <td className="py-3 px-3 font-medium text-gray-900">{p.name}</td>
-                  <td className="py-3 px-3 font-semibold text-emerald-700">{formatPrice(p.price)}</td>
-                  <td className="py-3 px-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setEditingProduct({ id: p.id, name: p.name, price: p.price })} className="p-1 text-gray-500 hover:text-blue-600">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1 text-gray-500 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          )}
         </div>
-      )}
+      </form>
+
+      {/* প্রোডাক্ট তালিকা */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-700 p-4 border-b">প্রোডাক্ট তালিকা ({products.length})</h3>
+        {loading ? (
+          <p className="p-6 text-center text-gray-500">লোড হচ্ছে...</p>
+        ) : products.length === 0 ? (
+          <p className="p-6 text-center text-gray-500">কোনো পণ্য পাওয়া যায়নি।</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-gray-600 text-sm border-b">
+                  <th className="p-3">ছবি</th>
+                  <th className="p-3">নাম</th>
+                  <th className="p-3">ক্যাটাগরি</th>
+                  <th className="p-3">দাম ও ছাড়</th>
+                  <th className="p-3">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => {
+                  const disc = p.mrp && p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+                  return (
+                    <tr key={p.id} className="border-b hover:bg-gray-50 text-sm">
+                      <td className="p-3">
+                        <img src={p.image_url || 'https://via.placeholder.com/50'} alt={p.name} className="w-12 h-12 object-cover rounded-md border" />
+                      </td>
+                      <td className="p-3 font-medium text-gray-800">{p.name}</td>
+                      <td className="p-3">
+                        <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-medium">{p.category || 'General'}</span>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-gray-900 font-semibold">৳{p.price}</div>
+                        {p.mrp > p.price && (
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                            <span className="line-through">৳{p.mrp}</span>
+                            <span className="text-green-600 font-bold">({disc}% off)</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3 flex gap-2 items-center">
+                        <button onClick={() => handleEdit(p)} className="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100" title="এডিট">
+                          <Edit size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(p.id)} className="p-1.5 bg-red-50 text-red-600 rounded-md hover:bg-red-100" title="ডিলিট">
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+    }
+        
