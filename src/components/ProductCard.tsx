@@ -1,14 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Plus, Star, Sparkles, Scale } from 'lucide-react';
 import type { Product } from '@/types';
-import { formatPrice, calculateDiscount } from '@/lib/format';
+import { formatPrice } from '@/lib/format';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
-  const discount = calculateDiscount(product.mrp, product.selling_price);
+
+  // সেফ চেক ও নিরাপদ ক্যালকুলেশন (যাতে ক্র্যাশ না করে)
+  const sellingPrice = Number(product.selling_price || product.price || 0);
+  const mrp = Number(product.mrp || sellingPrice);
+  const discount = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
+  
   const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   // Parse available unit options
@@ -104,11 +109,11 @@ export function ProductCard({ product }: { product: Product }) {
         {/* Price & MRP */}
         <div className="flex items-baseline gap-2 mt-2 pt-1">
           <span className="text-base md:text-lg font-extrabold text-emerald-800">
-            {formatPrice(product.selling_price)}
+            {formatPrice(sellingPrice)}
           </span>
           {discount > 0 && (
             <span className="text-xs text-gray-400 line-through">
-              {formatPrice(product.mrp)}
+              {formatPrice(mrp)}
             </span>
           )}
         </div>
@@ -143,4 +148,5 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
     </Link>
   );
-}
+          }
+          
