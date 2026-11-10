@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { formatPrice } from '../lib/format';
+import { supabase } from '@/lib/supabase';
+import { formatPrice } from '@/lib/format';
 
 export function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
