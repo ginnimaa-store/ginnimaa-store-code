@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Trash2, Edit, Save, X, Image as ImageIcon, Percent } from 'lucide-react';
+import { Trash2, Edit, Save, X, Percent } from 'lucide-react';
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  selling_price?: number;
   mrp: number;
   category: string;
   image_url: string;
@@ -23,13 +24,23 @@ export function AdminProducts() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [mrp, setMrp] = useState('');
-  const [category, setCategory] = useState('Spices');
+  const [category, setCategory] = useState('Fresh');
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [stock, setStock] = useState('10');
 
-  // ক্যাটাগরি তালিকা
-  const categories = ['Spices', 'Grocery', 'Pickles', 'Snacks', 'Beverages'];
+  // আপনার চাহিদা অনুযায়ী ক্যাটাগরি ও সাব-ক্যাটাগরি তালিকা
+  const categories = [
+    'Fresh',
+    'Fish',
+    'Meat',
+    'Vegetables',
+    'Spices',
+    'Grocery',
+    'Pickles',
+    'Snacks',
+    'Beverages'
+  ];
 
   useEffect(() => {
     fetchProducts();
@@ -48,7 +59,6 @@ export function AdminProducts() {
     }
   }
 
-  // ডিসকাউন্ট পার্সেন্টেজ স্বয়ংক্রিয় হিসাব করার ফাংশন
   const calculateDiscount = (sellingPrice: string, mrpPrice: string) => {
     const sPrice = parseFloat(sellingPrice);
     const mPrice = parseFloat(mrpPrice);
@@ -65,7 +75,7 @@ export function AdminProducts() {
     setName('');
     setPrice('');
     setMrp('');
-    setCategory('Spices');
+    setCategory('Fresh');
     setImageUrl('');
     setDescription('');
     setStock('10');
@@ -76,10 +86,14 @@ export function AdminProducts() {
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const parsedPrice = parseFloat(price) || 0;
+      const parsedMrp = parseFloat(mrp) || parsedPrice;
+
       const productData = {
         name,
-        price: parseFloat(price) || 0,
-        mrp: parseFloat(mrp) || parseFloat(price) || 0,
+        price: parsedPrice,
+        selling_price: parsedPrice,
+        mrp: parsedMrp,
         category,
         image_url: imageUrl || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=500&q=80',
         description,
@@ -105,9 +119,10 @@ export function AdminProducts() {
 
   const handleEdit = (product: Product) => {
     setName(product.name);
-    setPrice(product.price.toString());
-    setMrp(product.mrp?.toString() || product.price.toString());
-    setCategory(product.category || 'Spices');
+    const pValue = product.selling_price || product.price || 0;
+    setPrice(pValue.toString());
+    setMrp(product.mrp?.toString() || pValue.toString());
+    setCategory(product.category || 'Fresh');
     setImageUrl(product.image_url || '');
     setDescription(product.description || '');
     setStock(product.stock?.toString() || '10');
@@ -147,7 +162,7 @@ export function AdminProducts() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="যেমন: খাঁটি সর্ষের তেল"
+              placeholder="যেমন: রুই মাছ / খাসির মাংস / টাজা শাকসবজি"
               className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
             />
           </div>
@@ -182,7 +197,7 @@ export function AdminProducts() {
               <label className="block text-sm font-medium text-gray-600">পূর্বের দাম (MRP) *</label>
               {discountPercent > 0 && (
                 <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Percent size={12} /> {discountPercent}% ছাড় (Discount)
+                  <Percent size={12} /> {discountPercent}% ছাড়
                 </span>
               )}
             </div>
@@ -270,7 +285,8 @@ export function AdminProducts() {
               </thead>
               <tbody>
                 {products.map((p) => {
-                  const disc = p.mrp && p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+                  const actualPrice = p.selling_price || p.price || 0;
+                  const disc = p.mrp && p.mrp > actualPrice ? Math.round(((p.mrp - actualPrice) / p.mrp) * 100) : 0;
                   return (
                     <tr key={p.id} className="border-b hover:bg-gray-50 text-sm">
                       <td className="p-3">
@@ -281,8 +297,8 @@ export function AdminProducts() {
                         <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-medium">{p.category || 'General'}</span>
                       </td>
                       <td className="p-3">
-                        <div className="text-gray-900 font-semibold">৳{p.price}</div>
-                        {p.mrp > p.price && (
+                        <div className="text-gray-900 font-semibold">৳{actualPrice}</div>
+                        {p.mrp > actualPrice && (
                           <div className="text-xs text-gray-500 flex items-center gap-1.5">
                             <span className="line-through">৳{p.mrp}</span>
                             <span className="text-green-600 font-bold">({disc}% off)</span>
@@ -308,4 +324,4 @@ export function AdminProducts() {
     </div>
   );
     }
-        
+         
