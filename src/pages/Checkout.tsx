@@ -79,8 +79,9 @@ export function Checkout() {
   };
 
   // ডেলিভারি চার্জ নিয়ম: ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
-  const subtotal = getSubtotal();
-  const deliveryCharge = subtotal >= 200 ? 0 : 35;
+    const subtotal = Number(getSubtotal()) || 0;
+  // নিয়ম: ২০০ টাকার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকা বা তার কম হলে ৩৫ টাকা
+  const deliveryCharge = subtotal > 200 ? 0 : 35;
   const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
