@@ -21,7 +21,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
       <div className="bg-green-700 text-white text-center text-xs py-1.5 px-4 font-medium">
-        Free delivery on orders above ₹499
+        Free delivery on orders above ₹199
       </div>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between gap-3">
