@@ -5,7 +5,7 @@ import { formatPrice } from '@/lib/format';
 
 export function Cart() {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, getSubtotal, getDeliveryCharge, getTotal } = useCart();
+  const { items, updateQuantity, removeFromCart, getSubtotal } = useCart();
 
   if (items.length === 0) {
     return (
@@ -13,7 +13,7 @@ export function Cart() {
         <h1 className="text-xl font-bold text-gray-900 mb-4">আপনার শপিং কার্ট</h1>
         <div className="bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-xs">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-emerald-700">
-            <ShoppingBag size={32} />
+            <ShoppingBag size/={32} />
           </div>
           <p className="text-gray-800 font-bold text-base mt-4">আপনার কার্ট খালি আছে</p>
           <p className="text-xs text-gray-400 mt-1">তাজা মাছ, মুরগি বা খাসির মাংস কার্টে যোগ করুন</p>
@@ -35,6 +35,11 @@ export function Cart() {
     }
     return sum;
   }, 0);
+
+  // নিখুঁত ডেলিভারি চার্জ নিয়ম: ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
+  const subtotal = Number(getSubtotal()) || 0;
+  const deliveryCharge = subtotal >= 200 ? 0 : 35;
+  const grandTotal = subtotal + deliveryCharge;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-5">
@@ -129,16 +134,16 @@ export function Cart() {
         <div className="space-y-2 text-xs md:text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">পণ্যের মোট মূল্য</span>
-            <span className="font-semibold text-gray-800">{formatPrice(getSubtotal())}</span>
+            <span className="font-semibold text-gray-800">{formatPrice(subtotal)}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-gray-600">ডেলিভারি চার্জ</span>
             <span className="font-semibold">
-              {getDeliveryCharge() === 0 ? (
+              {deliveryCharge === 0 ? (
                 <span className="text-emerald-700 font-bold">ফ্রি (FREE)</span>
               ) : (
-                formatPrice(getDeliveryCharge())
+                formatPrice(deliveryCharge)
               )}
             </span>
           </div>
@@ -152,7 +157,7 @@ export function Cart() {
 
           <div className="pt-2 border-t border-gray-100 flex justify-between items-baseline">
             <span className="font-bold text-gray-900 text-sm">সর্বমোট প্রদেয়</span>
-            <span className="font-extrabold text-emerald-800 text-lg">{formatPrice(getTotal())}</span>
+            <span className="font-extrabold text-emerald-800 text-lg">{formatPrice(grandTotal)}</span>
           </div>
         </div>
 
@@ -172,5 +177,5 @@ export function Cart() {
       </button>
     </div>
   );
-                }
-              
+      }
+      
