@@ -7,7 +7,7 @@ import { formatPrice, generateOrderNumber, generateOTP } from '@/lib/format';
 
 export function Checkout() {
   const navigate = useNavigate();
-  const { items, getSubtotal, getTotal, clearCart } = useCart();
+  const { items, getSubtotal, clearCart } = useCart();
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
@@ -22,7 +22,6 @@ export function Checkout() {
   // PIN code verification
   const [pinVerified, setPinVerified] = useState<boolean | null>(null);
   const [pinAreaName, setPinAreaName] = useState('');
-  const [pinDeliveryCharge, setPinDeliveryCharge] = useState<number | null>(null);
   const [verifyingPin, setVerifyingPin] = useState(false);
 
   // Payment State
@@ -65,26 +64,23 @@ export function Checkout() {
     setVerifyingPin(true);
     const { data } = await supabase
       .from('serviceable_pincodes')
-      .select('area_name, delivery_charge, is_active')
+      .select('area_name, is_active')
       .eq('pin_code', pinCode.trim())
       .maybeSingle();
 
     if (data && data.is_active) {
       setPinVerified(true);
       setPinAreaName(data.area_name);
-      setPinDeliveryCharge(Number(data.delivery_charge ?? 35));
     } else {
       setPinVerified(false);
       setPinAreaName('');
-      setPinDeliveryCharge(null);
     }
     setVerifyingPin(false);
   };
 
-  // নিয়ম: ২০০ টাকার নিচে হলে ডেলিভারি চার্জ ৩৫ টাকা, ২০০ বা তার বেশি হলে ফ্রি (০ টাকা)
+  // ডেলিভারি চার্জ নিয়ম: ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
   const subtotal = getSubtotal();
-  const baseDeliveryCharge = subtotal < 200 ? 35 : 0;
-  const deliveryCharge = pinVerified && pinDeliveryCharge !== null ? pinDeliveryCharge : baseDeliveryCharge;
+  const deliveryCharge = subtotal >= 200 ? 0 : 35;
   const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
@@ -93,7 +89,7 @@ export function Checkout() {
     if (!/^\d{10}$/.test(mobile)) e.mobile = 'সঠিক ১০ সংখ্যার মোবাইল নম্বর লিখুন';
     if (!address.trim()) e.address = 'সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন';
     if (!/^\d{6}$/.test(pinCode)) e.pinCode = 'সঠিক ৬ সংখ্যার পিন কোড লিখুন';
-    if (!pinVerified) e.pinCode = 'পিন কোড যাচাই করুন — এই এলাকায় ডেলিভারি পাওনা যায় কিনা দেখুন';
+    if (!pinVerified) e.pinCode = 'পিন কোড যাচাই করুন — এই এলাকায় ডেলিভারি উপলব্ধ কিনা দেখুন';
     if (paymentMethod === 'UPI_QR' && !paymentRefId.trim()) {
       e.paymentRef = 'পেমেন্ট সম্পন্ন করার পর রেফারেন্স / UTR নম্বর লিখুন';
     }
@@ -125,7 +121,7 @@ export function Checkout() {
         throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
       }
 
-      // 2. Insert order
+      // 2. Insert order with GPS coordinates (latitude & longitude)
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert({
@@ -135,26 +131,15 @@ export function Checkout() {
           mobile_number: customer.mobile,
           address: customer.address,
           pin_code: customer.pin_code,
-          customer_lat: latitude,
-          customer_lng: longitude,
+          customer_lat: latitude,  // জিপিএস ল্যাটিটিউড
+          customer_lng: longitude, // জিপিএস লংটিটিউড
           subtotal: subtotal,
           delivery_charge: deliveryCharge,
           total: grandTotal,
           payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
           payment_status: 'PENDING',
           payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
-          delivery_otp: otp,
           status: 'New',
-          items_json: items.map(item => ({
-            product_id: item.product.id,
-            product_name: item.product.name,
-            product_image: item.product.image_url,
-            pack_size: item.product.pack_size,
-            selling_price: item.product.selling_price,
-            mrp: item.product.mrp,
-            quantity: item.quantity,
-            line_total: item.product.selling_price * item.quantity,
-          })),
         })
         .select()
         .single();
@@ -281,7 +266,6 @@ export function Checkout() {
                   setPinCode(val);
                   setPinVerified(null);
                   setPinAreaName('');
-                  setPinDeliveryCharge(null);
                 }}
                 placeholder="৬ সংখ্যার পিন কোড"
                 className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200"
@@ -298,7 +282,7 @@ export function Checkout() {
             {errors.pinCode && <p className="text-xs text-rose-500 mt-1">{errors.pinCode}</p>}
             {pinVerified === true && (
               <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName} (চার্জ: {formatPrice(deliveryCharge)})
+                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName}
               </div>
             )}
             {pinVerified === false && (
@@ -411,7 +395,7 @@ export function Checkout() {
       >
         {placing ? (
           <>
-            <Loader2 size={18} className="animate-spin" /> অর্ডার প্লেস হচ্ছে...
+            <Loader2 size={18} className="animate-spin" /> অর্ডার প্লেস করা হচ্ছে...
           </>
         ) : (
           'অর্ডার কনফার্ম করুন'
@@ -420,4 +404,4 @@ export function Checkout() {
     </div>
   );
     }
-          
+        
