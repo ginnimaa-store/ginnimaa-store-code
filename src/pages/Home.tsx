@@ -74,7 +74,7 @@ export function Home() {
     );
   }
 
-  const serviceAreas = ['Barasat', 'Madhyamgram', 'Barrackpore', 'Sodepur', 'Birati'];
+  const serviceAreas = ['Barasat'];
 
   return (
     <div className="max-w-6xl mx-auto">
