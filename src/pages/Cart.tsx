@@ -1,3 +1,4 @@
+// Cart.tsx ফাইল
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Scale, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -35,7 +36,6 @@ export function Cart() {
     return sum;
   }, 0);
 
-  // নিয়ম: ২০০ টাকা বা তার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
   const subtotal = Number(getSubtotal()) || 0;
   const deliveryCharge = subtotal >= 200 ? 0 : 35;
   const grandTotal = subtotal + deliveryCharge;
@@ -127,7 +127,6 @@ export function Cart() {
         })}
       </div>
 
-      {/* Bill summary */}
       <div className="mt-5 bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
         <h3 className="font-bold text-gray-900 text-sm mb-3">বিল ও পেমেন্টের বিবরণ</h3>
         <div className="space-y-2 text-xs md:text-sm">
@@ -176,5 +175,5 @@ export function Cart() {
       </button>
     </div>
   );
-                    }
-        
+              }
+                
