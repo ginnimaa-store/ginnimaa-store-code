@@ -1,3 +1,4 @@
+// CartContext.tsx ফাইল
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Product {
@@ -100,7 +101,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return found ? found.quantity : 0;
   };
 
-  // পণ্যের মোট মূল্য (Subtotal)
   const getSubtotal = () => {
     return items.reduce(
       (sum, item) => sum + (Number(item.product.selling_price) || 0) * item.quantity,
@@ -108,14 +108,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  // ডেলিভারি চার্জ নিয়ম: ২০০ টাকার নিচে হলে ৩৫ টাকা, ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা)
+  // নিয়ম: ২০০ টাকার নিচে হলে ৩৫ টাকা, ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা)
   const getDeliveryCharge = () => {
     const subtotal = getSubtotal();
     if (subtotal === 0) return 0;
     return subtotal >= 200 ? 0 : 35;
   };
 
-  // সর্বমোট প্রদেয় (Grand Total)
   const getTotal = () => {
     return getSubtotal() + getDeliveryCharge();
   };
@@ -155,5 +154,5 @@ export function useCart() {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-                        }
+             }
       
