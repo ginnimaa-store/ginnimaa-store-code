@@ -1,3 +1,4 @@
+// Checkout.tsx ফাইল
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Banknote, QrCode, MapPin, Loader2, CheckCircle2, Navigation, AlertCircle } from 'lucide-react';
@@ -13,19 +14,15 @@ export function Checkout() {
   const [address, setAddress] = useState('');
   const [pinCode, setPinCode] = useState('');
 
-  // GPS Location state
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [locationSuccess, setLocationSuccess] = useState(false);
 
-  // PIN code verification
   const [pinVerified, setPinVerified] = useState<boolean | null>(null);
   const [pinAreaName, setPinAreaName] = useState('');
-  const [pinBaseCharge, setPinBaseCharge] = useState<number>(35);
   const [verifyingPin, setVerifyingPin] = useState(false);
 
-  // Payment State
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'UPI_QR'>('COD');
   const [paymentRefId, setPaymentRefId] = useState('');
 
@@ -37,7 +34,6 @@ export function Checkout() {
     return null;
   }
 
-  // GPS Coordinates Fetch
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       alert('আপনার ডিভাইসে GPS সুবিধা সমর্থিত নয়।');
@@ -59,22 +55,18 @@ export function Checkout() {
     );
   };
 
-  // PIN Code verification
   const handleVerifyPin = async () => {
     if (!/^\d{6}$/.test(pinCode)) return;
     setVerifyingPin(true);
     const { data } = await supabase
       .from('serviceable_pincodes')
-      .select('area_name, delivery_charge, is_active')
+      .select('area_name, is_active')
       .eq('pin_code', pinCode.trim())
       .maybeSingle();
 
     if (data && data.is_active) {
       setPinVerified(true);
       setPinAreaName(data.area_name);
-      // ডাটাবেসে চার্জ থাকলে সেটি নেবে, না থাকলে ডিফল্ট ৩৫ টাকা
-      const dbCharge = Number(data.delivery_charge);
-      setPinBaseCharge(dbCharge > 0 ? dbCharge : 35);
     } else {
       setPinVerified(false);
       setPinAreaName('');
@@ -82,9 +74,9 @@ export function Checkout() {
     setVerifyingPin(false);
   };
 
-  // চূড়ান্ত ডেলিভারি চার্জ হিসাব: ২০০ টাকা বা তার বেশি হলে সবসময় ফ্রি (০ টাকা), নিচে হলে পিনকোডের চার্জ (৩৫ টাকা)
+  // ২০০ টাকা বা তার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
   const subtotal = Number(getSubtotal()) || 0;
-  const deliveryCharge = subtotal >= 200 ? 0 : (pinVerified ? pinBaseCharge : 35);
+  const deliveryCharge = subtotal >= 200 ? 0 : 35;
   const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
@@ -109,7 +101,6 @@ export function Checkout() {
     const otp = generateOTP();
 
     try {
-      // 1. Insert customer
       const { data: customer, error: customerErr } = await supabase
         .from('customers')
         .insert({
@@ -125,7 +116,6 @@ export function Checkout() {
         throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
       }
 
-      // 2. Insert order with GPS coordinates (customer_lat & customer_lng)
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert({
@@ -163,7 +153,6 @@ export function Checkout() {
         throw new Error(orderErr?.message || 'অর্ডার সম্পন্ন করা যায়নি।');
       }
 
-      // 3. Insert order items
       const orderItemsData = items.map(item => ({
         order_id: order.id,
         product_id: item.product.id,
@@ -197,7 +186,6 @@ export function Checkout() {
 
       <h1 className="text-xl font-bold text-gray-900 mb-4">চেকআউট ও ডেলিভারি</h1>
 
-      {/* Customer details form */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-gray-900">ডেলিভারি ঠিকানা ও তথ্য</h3>
@@ -297,7 +285,7 @@ export function Checkout() {
             {errors.pinCode && <p className="text-xs text-rose-500 mt-1">{errors.pinCode}</p>}
             {pinVerified === true && (
               <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName} (চার্জ: {deliveryCharge === 0 ? 'ফ্রি' : formatPrice(deliveryCharge)})
+                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName} ({deliveryCharge === 0 ? 'ডেলিভারি ফ্রি' : `চার্জ: ${formatPrice(deliveryCharge)}`})
               </div>
             )}
             {pinVerified === false && (
@@ -309,12 +297,10 @@ export function Checkout() {
         </div>
       </div>
 
-      {/* Payment methods */}
       <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
         <h3 className="font-bold text-gray-900 mb-3">পেমেন্ট পদ্ধতি নির্বাচন করুন</h3>
 
         <div className="space-y-3">
-          {/* COD Option */}
           <div
             onClick={() => setPaymentMethod('COD')}
             className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
@@ -335,7 +321,6 @@ export function Checkout() {
             </div>
           </div>
 
-          {/* UPI QR Option */}
           <div
             onClick={() => setPaymentMethod('UPI_QR')}
             className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
@@ -372,7 +357,6 @@ export function Checkout() {
         </div>
       </div>
 
-      {/* Order Summary */}
       <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
         <h3 className="font-bold text-gray-900 text-sm mb-3">বিল ও পেমেন্টের বিবরণ</h3>
         <div className="space-y-2 text-xs md:text-sm">
@@ -418,4 +402,5 @@ export function Checkout() {
       </button>
     </div>
   );
-}
+  }
+            
