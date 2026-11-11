@@ -1,4 +1,4 @@
-// Checkout.tsx ফাইল
+// checkout.tsx ফাইল
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Banknote, QrCode, MapPin, Loader2, CheckCircle2, Navigation, AlertCircle } from 'lucide-react';
@@ -101,6 +101,7 @@ export function Checkout() {
     const otp = generateOTP();
 
     try {
+      // 1. Insert customer
       const { data: customer, error: customerErr } = await supabase
         .from('customers')
         .insert({
@@ -116,6 +117,7 @@ export function Checkout() {
         throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
       }
 
+      // 2. Insert order (নিরাপদ ও নিশ্চিত কলামসমূহ)
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert({
@@ -125,26 +127,13 @@ export function Checkout() {
           mobile_number: customer.mobile,
           address: customer.address,
           pin_code: customer.pin_code,
-          customer_lat: latitude,
-          customer_lng: longitude,
           subtotal: subtotal,
           delivery_charge: deliveryCharge,
           total: grandTotal,
           payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
           payment_status: 'PENDING',
           payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
-          delivery_otp: otp,
           status: 'New',
-          items_json: items.map(item => ({
-            product_id: item.product.id,
-            product_name: item.product.name,
-            product_image: item.product.image_url,
-            pack_size: item.product.pack_size,
-            selling_price: item.product.selling_price,
-            mrp: item.product.mrp,
-            quantity: item.quantity,
-            line_total: item.product.selling_price * item.quantity,
-          })),
         })
         .select()
         .single();
@@ -153,6 +142,7 @@ export function Checkout() {
         throw new Error(orderErr?.message || 'অর্ডার সম্পন্ন করা যায়নি।');
       }
 
+      // 3. Insert order items
       const orderItemsData = items.map(item => ({
         order_id: order.id,
         product_id: item.product.id,
@@ -402,5 +392,5 @@ export function Checkout() {
       </button>
     </div>
   );
-  }
-            
+          }
+    
