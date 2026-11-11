@@ -22,6 +22,7 @@ export function Checkout() {
   // PIN code verification
   const [pinVerified, setPinVerified] = useState<boolean | null>(null);
   const [pinAreaName, setPinAreaName] = useState('');
+  const [pinBaseCharge, setPinBaseCharge] = useState<number>(35);
   const [verifyingPin, setVerifyingPin] = useState(false);
 
   // Payment State
@@ -64,13 +65,16 @@ export function Checkout() {
     setVerifyingPin(true);
     const { data } = await supabase
       .from('serviceable_pincodes')
-      .select('area_name, is_active')
+      .select('area_name, delivery_charge, is_active')
       .eq('pin_code', pinCode.trim())
       .maybeSingle();
 
     if (data && data.is_active) {
       setPinVerified(true);
       setPinAreaName(data.area_name);
+      // ডাটাবেসে চার্জ থাকলে সেটি নেবে, না থাকলে ডিফল্ট ৩৫ টাকা
+      const dbCharge = Number(data.delivery_charge);
+      setPinBaseCharge(dbCharge > 0 ? dbCharge : 35);
     } else {
       setPinVerified(false);
       setPinAreaName('');
@@ -78,10 +82,9 @@ export function Checkout() {
     setVerifyingPin(false);
   };
 
-  // ডেলিভারি চার্জ নিয়ম: ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
-    const subtotal = Number(getSubtotal()) || 0;
-  // নিয়ম: ২০০ টাকার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকা বা তার কম হলে ৩৫ টাকা
-  const deliveryCharge = subtotal > 200 ? 0 : 35;
+  // চূড়ান্ত ডেলিভারি চার্জ হিসাব: ২০০ টাকা বা তার বেশি হলে সবসময় ফ্রি (০ টাকা), নিচে হলে পিনকোডের চার্জ (৩৫ টাকা)
+  const subtotal = Number(getSubtotal()) || 0;
+  const deliveryCharge = subtotal >= 200 ? 0 : (pinVerified ? pinBaseCharge : 35);
   const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
@@ -122,7 +125,7 @@ export function Checkout() {
         throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
       }
 
-      // 2. Insert order with GPS coordinates (latitude & longitude)
+      // 2. Insert order with GPS coordinates (customer_lat & customer_lng)
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert({
@@ -132,15 +135,26 @@ export function Checkout() {
           mobile_number: customer.mobile,
           address: customer.address,
           pin_code: customer.pin_code,
-          customer_lat: latitude,  // জিপিএস ল্যাটিটিউড
-          customer_lng: longitude, // জিপিএস লংটিটিউড
+          customer_lat: latitude,
+          customer_lng: longitude,
           subtotal: subtotal,
           delivery_charge: deliveryCharge,
           total: grandTotal,
           payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
           payment_status: 'PENDING',
           payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
+          delivery_otp: otp,
           status: 'New',
+          items_json: items.map(item => ({
+            product_id: item.product.id,
+            product_name: item.product.name,
+            product_image: item.product.image_url,
+            pack_size: item.product.pack_size,
+            selling_price: item.product.selling_price,
+            mrp: item.product.mrp,
+            quantity: item.quantity,
+            line_total: item.product.selling_price * item.quantity,
+          })),
         })
         .select()
         .single();
@@ -283,7 +297,7 @@ export function Checkout() {
             {errors.pinCode && <p className="text-xs text-rose-500 mt-1">{errors.pinCode}</p>}
             {pinVerified === true && (
               <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName}
+                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName} (চার্জ: {deliveryCharge === 0 ? 'ফ্রি' : formatPrice(deliveryCharge)})
               </div>
             )}
             {pinVerified === false && (
@@ -404,5 +418,4 @@ export function Checkout() {
       </button>
     </div>
   );
-    }
-        
+}
