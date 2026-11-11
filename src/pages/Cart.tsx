@@ -13,7 +13,7 @@ export function Cart() {
         <h1 className="text-xl font-bold text-gray-900 mb-4">আপনার শপিং কার্ট</h1>
         <div className="bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-xs">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-emerald-700">
-            <ShoppingBag size/={32} />
+            <ShoppingBag size={32} />
           </div>
           <p className="text-gray-800 font-bold text-base mt-4">আপনার কার্ট খালি আছে</p>
           <p className="text-xs text-gray-400 mt-1">তাজা মাছ, মুরগি বা খাসির মাংস কার্টে যোগ করুন</p>
@@ -28,7 +28,6 @@ export function Cart() {
     );
   }
 
-  // মোট কত টাকা ছাড় পাওয়া গেল হিসাব
   const totalSavings = items.reduce((sum, item) => {
     if (item.product.mrp > item.product.selling_price) {
       return sum + (item.product.mrp - item.product.selling_price) * item.quantity;
@@ -36,7 +35,7 @@ export function Cart() {
     return sum;
   }, 0);
 
-  // নিখুঁত ডেলিভারি চার্জ নিয়ম: ২০০ টাকা বা তার বেশি হলে ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
+  // নিয়ম: ২০০ টাকা বা তার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
   const subtotal = Number(getSubtotal()) || 0;
   const deliveryCharge = subtotal >= 200 ? 0 : 35;
   const grandTotal = subtotal + deliveryCharge;
@@ -177,5 +176,5 @@ export function Cart() {
       </button>
     </div>
   );
-      }
-      
+                    }
+        
