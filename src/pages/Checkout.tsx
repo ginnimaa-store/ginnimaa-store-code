@@ -72,7 +72,7 @@ export function Checkout() {
     if (data && data.is_active) {
       setPinVerified(true);
       setPinAreaName(data.area_name);
-      setPinDeliveryCharge(Number(data.delivery_charge));
+      setPinDeliveryCharge(Number(data.delivery_charge ?? 35));
     } else {
       setPinVerified(false);
       setPinAreaName('');
@@ -81,8 +81,11 @@ export function Checkout() {
     setVerifyingPin(false);
   };
 
-  const deliveryCharge = pinVerified && pinDeliveryCharge !== null ? pinDeliveryCharge : (getSubtotal() >= 499 ? 0 : 40);
-  const grandTotal = getSubtotal() + deliveryCharge;
+  // নিয়ম: ২০০ টাকার নিচে হলে ডেলিভারি চার্জ ৩৫ টাকা, ২০০ বা তার বেশি হলে ফ্রি (০ টাকা)
+  const subtotal = getSubtotal();
+  const baseDeliveryCharge = subtotal < 200 ? 35 : 0;
+  const deliveryCharge = pinVerified && pinDeliveryCharge !== null ? pinDeliveryCharge : baseDeliveryCharge;
+  const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -105,85 +108,85 @@ export function Checkout() {
     const orderNumber = generateOrderNumber();
     const otp = generateOTP();
 
-    // 1. Insert customer
-    const { data: customer, error: customerErr } = await supabase
-      .from('customers')
-      .insert({
-        name: name.trim(),
-        mobile: mobile.trim(),
-        address: address.trim(),
-        pin_code: pinCode.trim(),
-      })
-      .select()
-      .single();
+    try {
+      // 1. Insert customer
+      const { data: customer, error: customerErr } = await supabase
+        .from('customers')
+        .insert({
+          name: name.trim(),
+          mobile: mobile.trim(),
+          address: address.trim(),
+          pin_code: pinCode.trim(),
+        })
+        .select()
+        .single();
 
-    if (customerErr || !customer) {
+      if (customerErr || !customer) {
+        throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
+      }
+
+      // 2. Insert order
+      const { data: order, error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: customer.id,
+          customer_name: customer.name,
+          mobile_number: customer.mobile,
+          address: customer.address,
+          pin_code: customer.pin_code,
+          customer_lat: latitude,
+          customer_lng: longitude,
+          subtotal: subtotal,
+          delivery_charge: deliveryCharge,
+          total: grandTotal,
+          payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
+          payment_status: 'PENDING',
+          payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
+          delivery_otp: otp,
+          status: 'New',
+          items_json: items.map(item => ({
+            product_id: item.product.id,
+            product_name: item.product.name,
+            product_image: item.product.image_url,
+            pack_size: item.product.pack_size,
+            selling_price: item.product.selling_price,
+            mrp: item.product.mrp,
+            quantity: item.quantity,
+            line_total: item.product.selling_price * item.quantity,
+          })),
+        })
+        .select()
+        .single();
+
+      if (orderErr || !order) {
+        throw new Error(orderErr?.message || 'অর্ডার সম্পন্ন করা যায়নি।');
+      }
+
+      // 3. Insert order items
+      const orderItemsData = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        quantity: item.quantity,
+        price: item.product.selling_price,
+      }));
+
+      const { error: itemsErr } = await supabase
+        .from('order_items')
+        .insert(orderItemsData);
+
+      if (itemsErr) {
+        throw new Error(itemsErr.message || 'অর্ডার আইটেম সংরক্ষণ করা যায়নি।');
+      }
+
       setPlacing(false);
-      setErrors({ form: 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।' });
-      return;
-    }
-
-    // 2. Insert order with GPS, payment, and OTP
-    const { data: order, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        customer_id: customer.id,
-        customer_name: customer.name,
-        mobile_number: customer.mobile,
-        address: customer.address,
-        pin_code: customer.pin_code,
-        customer_lat: latitude,
-        customer_lng: longitude,
-        subtotal: getSubtotal(),
-        delivery_charge: deliveryCharge,
-        total: grandTotal,
-        payment_method: paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI QR Payment',
-        payment_status: 'PENDING',
-        payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
-        delivery_otp: otp,
-        status: 'New',
-        items_json: items.map(item => ({
-          product_id: item.product.id,
-          product_name: item.product.name,
-          product_image: item.product.image_url,
-          pack_size: item.product.pack_size,
-          selling_price: item.product.selling_price,
-          mrp: item.product.mrp,
-          quantity: item.quantity,
-          line_total: item.product.selling_price * item.quantity,
-        })),
-      })
-      .select()
-      .single();
-
-    if (orderErr || !order) {
+      clearCart();
+      navigate(`/order-confirmation/${order.id}?otp=${otp}`);
+    } catch (err: any) {
+      console.error('Order placement error:', err);
       setPlacing(false);
-      setErrors({ form: 'অর্ডার সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।' });
-      return;
+      setErrors({ form: err.message || 'অর্ডার প্লেস করার সময় সমস্যা হয়েছে। আবার চেষ্টা করুন।' });
     }
-
-    // 3. Insert order items
-    const orderItemsData = items.map(item => ({
-      order_id: order.id,
-      product_id: item.product.id,
-      quantity: item.quantity,
-      price: item.product.selling_price,
-    }));
-
-    const { error: itemsErr } = await supabase
-      .from('order_items')
-      .insert(orderItemsData);
-
-    if (itemsErr) {
-      setPlacing(false);
-      setErrors({ form: 'অর্ডার আইটেম সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।' });
-      return;
-    }
-
-    setPlacing(false);
-    clearCart();
-    navigate(`/order-confirmation/${order.id}?otp=${otp}`);
   };
 
   return (
@@ -295,12 +298,12 @@ export function Checkout() {
             {errors.pinCode && <p className="text-xs text-rose-500 mt-1">{errors.pinCode}</p>}
             {pinVerified === true && (
               <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                <CheckCircle2 size={13} /> ডেলিভারি পাওনা যায় — {pinAreaName} (চার্জ: {formatPrice(pinDeliveryCharge ?? 0)})
+                <CheckCircle2 size={13} /> ডেলিভারি উপলব্ধ — {pinAreaName} (চার্জ: {formatPrice(deliveryCharge)})
               </div>
             )}
             {pinVerified === false && (
               <div className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg">
-                <AlertCircle size={13} /> দুঃখিত, এই পিন কোডে ডেলিভারি পাওনা যায় না
+                <AlertCircle size={13} /> দুঃখিত, এই পিন কোডে ডেলিভারি উপলব্ধ নয়
               </div>
             )}
           </div>
@@ -376,7 +379,7 @@ export function Checkout() {
         <div className="space-y-2 text-xs md:text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">পণ্যের মোট মূল্য</span>
-            <span className="font-semibold text-gray-800">{formatPrice(getSubtotal())}</span>
+            <span className="font-semibold text-gray-800">{formatPrice(subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">ডেলিভারি চার্জ</span>
@@ -416,4 +419,5 @@ export function Checkout() {
       </button>
     </div>
   );
-}
+    }
+          
