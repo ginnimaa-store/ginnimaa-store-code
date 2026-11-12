@@ -21,6 +21,7 @@ export function Checkout() {
 
   const [pinVerified, setPinVerified] = useState<boolean | null>(null);
   const [pinAreaName, setPinAreaName] = useState('');
+  const [pinDeliveryCharge, setPinDeliveryCharge] = useState<number | null>(null);
   const [verifyingPin, setVerifyingPin] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'UPI_QR'>('COD');
@@ -60,23 +61,26 @@ export function Checkout() {
     setVerifyingPin(true);
     const { data } = await supabase
       .from('serviceable_pincodes')
-      .select('area_name, is_active')
+      .select('area_name, is_active, delivery_charge')
       .eq('pin_code', pinCode.trim())
       .maybeSingle();
 
     if (data && data.is_active) {
       setPinVerified(true);
       setPinAreaName(data.area_name);
+      setPinDeliveryCharge(Number(data.delivery_charge) || 0);
     } else {
       setPinVerified(false);
       setPinAreaName('');
+      setPinDeliveryCharge(null);
     }
     setVerifyingPin(false);
   };
 
-  // ২০০ টাকা বা তার বেশি হলে ডেলিভারি ফ্রি (০ টাকা), ২০০ টাকার নিচে হলে ৩৫ টাকা
+  // Free delivery on orders ₹200+, otherwise use the PIN-code delivery charge
   const subtotal = Number(getSubtotal()) || 0;
-  const deliveryCharge = subtotal >= 200 ? 0 : 35;
+  const baseCharge = pinDeliveryCharge ?? 0;
+  const deliveryCharge = subtotal >= 200 ? 0 : baseCharge;
   const grandTotal = subtotal + deliveryCharge;
 
   const validate = () => {
@@ -259,6 +263,7 @@ export function Checkout() {
                   setPinCode(val);
                   setPinVerified(null);
                   setPinAreaName('');
+                  setPinDeliveryCharge(null);
                 }}
                 placeholder="৬ সংখ্যার পিন কোড"
                 className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 border border-gray-200"

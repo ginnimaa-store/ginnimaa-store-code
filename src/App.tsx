@@ -12,6 +12,8 @@ import { Checkout } from '@/pages/Checkout';
 import { OrderConfirmation } from '@/pages/OrderConfirmation';
 import { AdminLogin } from '@/pages/AdminLogin';
 import { AdminDashboard } from '@/pages/AdminDashboard';
+import { CustomerAuth } from '@/components/CustomerAuth';
+import { CustomerProfile } from '@/components/CustomerProfile';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
+              <Route path="/auth" element={<CustomerAuth />} />
+              <Route path="/profile" element={<CustomerProfile />} />
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
