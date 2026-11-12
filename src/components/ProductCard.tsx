@@ -10,7 +10,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
 
   // সেফ চেক ও নিরাপদ ক্যালকুলেশন (যাতে ক্র্যাশ না করে)
-  const sellingPrice = Number(product.selling_price || product.price || 0);
+  const sellingPrice = Number(product.selling_price || 0);
   const mrp = Number(product.mrp || sellingPrice);
   const discount = mrp > sellingPrice ? Math.round(((mrp - sellingPrice) / mrp) * 100) : 0;
   
@@ -25,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    addToCart(product);
+    addToCart(product as any);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   };

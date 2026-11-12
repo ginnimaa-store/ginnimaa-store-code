@@ -20,6 +20,8 @@ export interface Product {
   pack_size: string | null;
   net_weight?: number;
   weight_unit?: 'gm' | 'kg' | 'piece' | string;
+  unit_options?: string[] | string | null;
+  cut_options?: string[] | string | null;
   is_featured: boolean;
   is_best_seller: boolean;
   is_on_offer: boolean;
@@ -83,6 +85,10 @@ export interface Order {
   status: string;
   delivery_partner_id?: string | null;
   delivery_partner_name?: string | null;
+  delivery_status?: string;
+  delivery_otp?: string | null;
+  customer_lat?: number | null;
+  customer_lng?: number | null;
   items_json: OrderItemJson[] | null;
   created_at: string;
   customer: Customer | null;

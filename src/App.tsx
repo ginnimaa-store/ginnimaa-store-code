@@ -13,10 +13,6 @@ import { OrderConfirmation } from '@/pages/OrderConfirmation';
 import { AdminLogin } from '@/pages/AdminLogin';
 import { AdminDashboard } from '@/pages/AdminDashboard';
 
-// নতুন কাস্টমার অথ এবং প্রোফাইল কম্পোনেন্ট (আপনার ফোল্ডার স্ট্রাকচার অনুযায়ী পাথ ঠিক করে নেবেন)
-import { CustomerAuth } from '@/components/CustomerAuth';
-import { CustomerProfile } from '@/components/CustomerProfile';
-
 function App() {
   return (
     <AuthProvider>
@@ -31,12 +27,7 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
-              
-              {/* কাস্টমার সাইন-আপ, লগইন ও প্রোফাইল রাউট */}
-              <Route path="/auth" element={<CustomerAuth />} />
-              <Route path="/profile" element={<CustomerProfile />} />
             </Route>
-            
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"
