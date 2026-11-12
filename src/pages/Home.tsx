@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Tag, TrendingUp, Sparkles, MapPin, Search, CheckCircle2, AlertCircle, Loader2, Fish, Beef, Chicken, Soup, Drumstick } from 'lucide-react';
+import { ArrowRight, Tag, TrendingUp, Sparkles, MapPin, Search, CheckCircle2, AlertCircle, Loader2, Fish, Beef, Drumstick, Star, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Category, Product } from '@/types';
 import { ProductCard } from '@/components/ProductCard';
@@ -69,19 +69,25 @@ export function Home() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="w-8 h-8 border-3 border-green-700 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const serviceAreas = ['Barasat'];
+  const serviceAreas = ['Barasat', 'Madhyamgram', 'Sodepur'];
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto bg-amber-50/20 pb-12">
+      
+      {/* ৫. অ্যাডভারটাইজমেন্ট / নোটিশ বার */}
+      <div className="bg-amber-600 text-white text-xs py-2 px-4 text-center font-bold tracking-wide">
+        🔥 বিশেষ অফার: ২০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি! বারাসাত, মধ্যমগ্রাম ও সর্দিপুর এলাকায় সকালের তাজা মাছ ও মাংস।
+      </div>
+
       {/* Service Area Info Bar with PIN checker */}
-      <div className="m-4 bg-white rounded-2xl p-3 border border-gray-100 shadow-xs">
+      <div className="m-4 bg-white rounded-2xl p-3 border border-amber-100 shadow-xs">
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">
             <MapPin size={14} /> সার্ভিস এরিয়া:
           </div>
           <div className="flex items-center gap-1 flex-wrap">
@@ -100,17 +106,17 @@ export function Home() {
                 setPinStatus('idle');
               }}
               placeholder="পিন কোড"
-              className="w-24 px-2 py-1.5 bg-gray-50 rounded-lg text-xs border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              className="w-24 px-2 py-1.5 bg-gray-50 rounded-lg text-xs border border-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-600"
             />
             <button
               onClick={handlePinCheck}
               disabled={pinInput.length !== 6 || pinStatus === 'checking'}
-              className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700 disabled:opacity-50 transition-colors"
             >
               {pinStatus === 'checking' ? <Loader2 size={12} className="animate-spin" /> : 'চেক'}
             </button>
             {pinStatus === 'ok' && (
-              <span className="flex items-center gap-0.5 text-xs text-emerald-700 font-medium">
+              <span className="flex items-center gap-0.5 text-xs text-amber-800 font-medium">
                 <CheckCircle2 size={14} /> {pinArea}
               </span>
             )}
@@ -130,8 +136,8 @@ export function Home() {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="মাছ, মাংস, মুরগি, মসলা খুঁজুন..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all shadow-xs"
+            placeholder="তাজা মাছ, খাসির মাংস, চিকেন খুঁজুন..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl text-sm border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-xs"
           />
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
         </form>
@@ -147,7 +153,7 @@ export function Home() {
             <Link
               key={tag.slug}
               to={`/products?category=${tag.slug}`}
-              className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-emerald-400 hover:text-emerald-700 whitespace-nowrap transition-colors"
+              className="px-3 py-1 bg-white border border-amber-200 rounded-full text-xs font-medium text-gray-700 hover:border-amber-400 hover:text-amber-800 whitespace-nowrap transition-colors"
             >
               {tag.label}
             </Link>
@@ -155,54 +161,53 @@ export function Home() {
         </div>
       </div>
 
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-green-800 to-teal-900 m-4 rounded-3xl p-6 md:p-10 text-white shadow-lg">
+      {/* 4. Hero Banner (Yellow & Amber Theme) */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 m-4 rounded-3xl p-6 md:p-10 text-gray-900 shadow-md">
         <div className="relative z-10 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-xs font-semibold text-emerald-100 mb-3">
-            <MapPin size={13} /> তাজা মাছ ও মাংস ডেলিভারি
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 backdrop-blur-md rounded-full text-xs font-bold text-amber-900 mb-3 shadow-xs">
+            <MapPin size={13} /> সকালের তাজা স্টক ও হোম ডেলিভারি
           </div>
-          <h1 className="text-2xl md:text-4xl font-extrabold leading-tight">
+          <h1 className="text-2xl md:text-4xl font-black leading-tight text-gray-900">
             তাজা মাছ ও খাঁটি মাংস,<br />সরাসরি আপনার দরজায়
           </h1>
-          <p className="mt-2 text-emerald-100 text-sm md:text-base">
-            সকালে কাটা ফ্রেশ মাছ, দেশি মুরগি ও টাটকা খাসির মাংস — দ্রুত হোম ডেলিভারি
+          <p className="mt-2 text-amber-950 text-sm md:text-base font-medium">
+            সকালে কাটা ফ্রেশ মাছ, দেশি মুরগি ও টাটকা খাসির মাংস — দ্রুত ও স্বাস্থ্যসম্মত হোম ডেলিভারি
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-5">
             <Link
               to="/products"
-              className="inline-flex items-center gap-2 bg-white text-emerald-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors shadow-sm"
             >
               এখনই অর্ডার করুন <ArrowRight size={16} />
             </Link>
             <Link
               to="/products?category=fish"
-              className="inline-flex items-center gap-1.5 bg-emerald-700/60 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm border border-emerald-500/40 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-white/80 hover:bg-white text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm border border-amber-300 transition-colors shadow-xs"
             >
               <Fish size={16} /> তাজা মাছ
             </Link>
             <Link
               to="/products?category=meat"
-              className="inline-flex items-center gap-1.5 bg-emerald-700/60 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm border border-emerald-500/40 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-white/80 hover:bg-white text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm border border-amber-300 transition-colors shadow-xs"
             >
               <Drumstick size={16} /> মাংস
             </Link>
           </div>
         </div>
-        <div className="absolute right-0 bottom-0 w-48 h-48 md:w-80 md:h-80 rounded-full bg-white/10 -mr-16 -mb-16 pointer-events-none" />
-        <div className="absolute right-12 top-4 w-28 h-28 rounded-full bg-emerald-500/10 pointer-events-none" />
+        <div className="absolute right-0 bottom-0 w-48 h-48 md:w-80 md:h-80 rounded-full bg-white/20 -mr-16 -mb-16 pointer-events-none" />
       </div>
 
       {/* Fresh Fish & Meat Quick Category Banners */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
         <Link
           to="/products?category=fish"
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-900 to-blue-800 p-4 text-white shadow hover:shadow-md transition-all group"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-600 to-yellow-600 p-4 text-white shadow hover:shadow-md transition-all group"
         >
           <div className="relative z-10">
-            <Fish size={28} className="text-cyan-300" />
+            <Fish size={28} className="text-white" />
             <h3 className="font-bold text-base md:text-lg mt-1">তাজা মাছ</h3>
-            <p className="text-[11px] md:text-xs text-cyan-200 mt-0.5">রুই, কাতলা, ইলিশ, চিংড়ি ও জ্যান্ত মাছ</p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-300 mt-2 group-hover:translate-x-1 transition-transform">
+            <p className="text-[11px] md:text-xs text-amber-100 mt-0.5">রুই, কাতলা, ইলিশ, চিংড়ি ও জ্যান্ত মাছ</p>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white mt-2 group-hover:translate-x-1 transition-transform">
               সব মাছ দেখুন <ArrowRight size={12} />
             </span>
           </div>
@@ -210,13 +215,13 @@ export function Home() {
 
         <Link
           to="/products?category=meat"
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-950 to-rose-900 p-4 text-white shadow hover:shadow-md transition-all group"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-700 to-amber-900 p-4 text-white shadow hover:shadow-md transition-all group"
         >
           <div className="relative z-10">
-            <Beef size={28} className="text-rose-300" />
+            <Beef size={28} className="text-amber-200" />
             <h3 className="font-bold text-base md:text-lg mt-1">ফ্রেশ মাংস</h3>
-            <p className="text-[11px] md:text-xs text-rose-200 mt-0.5">ফার্ম ও দেশি চিকেন, কচি খাসির মাংস</p>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-300 mt-2 group-hover:translate-x-1 transition-transform">
+            <p className="text-[11px] md:text-xs text-amber-200 mt-0.5">ফার্ম ও দেশি চিকেন, কচি খাসির মাংস</p>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-200 mt-2 group-hover:translate-x-1 transition-transform">
               মাংসের তালিকা <ArrowRight size={12} />
             </span>
           </div>
@@ -227,7 +232,7 @@ export function Home() {
       <section className="px-4 mt-7">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-gray-900">ক্যাটাগরি সমূহ</h2>
-          <Link to="/categories" className="text-sm text-emerald-700 font-semibold flex items-center gap-1 hover:underline">
+          <Link to="/categories" className="text-sm text-amber-800 font-semibold flex items-center gap-1 hover:underline">
             সব দেখুন <ArrowRight size={14} />
           </Link>
         </div>
@@ -238,7 +243,7 @@ export function Home() {
               to={`/products?category=${cat.slug}`}
               className="flex flex-col items-center gap-2 group"
             >
-              <div className="w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 group-hover:border-emerald-400 group-hover:shadow transition-all">
+              <div className="w-full aspect-square rounded-2xl overflow-hidden bg-white border border-amber-100 group-hover:border-amber-400 group-hover:shadow transition-all">
                 <img
                   src={cat.image_url || ''}
                   alt={cat.name}
@@ -246,7 +251,7 @@ export function Home() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              <span className="text-xs font-medium text-gray-700 text-center leading-tight group-hover:text-emerald-700 transition-colors">
+              <span className="text-xs font-semibold text-gray-700 text-center leading-tight group-hover:text-amber-800 transition-colors">
                 {cat.name}
               </span>
             </Link>
@@ -262,7 +267,7 @@ export function Home() {
               <Tag size={20} className="text-red-500" />
               <h2 className="text-lg font-bold text-gray-900">সেরা অফার ও ছাড়</h2>
             </div>
-            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-emerald-700">আরও দেখুন</Link>
+            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-amber-800">আরও দেখুন</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {offers.map(p => (
@@ -277,10 +282,10 @@ export function Home() {
         <section className="px-4 mt-8">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Sparkles size={20} className="text-emerald-600" />
+              <Sparkles size={20} className="text-amber-600" />
               <h2 className="text-lg font-bold text-gray-900">জনপ্রিয় পছন্দসমূহ</h2>
             </div>
-            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-emerald-700">আরও দেখুন</Link>
+            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-amber-800">আরও দেখুন</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {featured.map(p => (
@@ -292,13 +297,13 @@ export function Home() {
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
-        <section className="px-4 mt-8 mb-6">
+        <section className="px-4 mt-8">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp size={20} className="text-amber-500" />
+              <TrendingUp size={20} className="text-amber-600" />
               <h2 className="text-lg font-bold text-gray-900">সবচেয়ে বেশি বিক্রিত</h2>
             </div>
-            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-emerald-700">আরও দেখুন</Link>
+            <Link to="/products" className="text-xs text-gray-500 font-medium hover:text-amber-800">আরও দেখুন</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {bestSellers.map(p => (
@@ -308,20 +313,69 @@ export function Home() {
         </section>
       )}
 
+      {/* 6. Customer Review Section */}
+      <section className="px-4 mt-8">
+        <div className="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="text-amber-500 fill-amber-500" size={20} />
+            <h2 className="text-lg font-bold text-gray-900">কাস্টমারদের মতামত ও রেটিং</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-amber-50/50 border border-amber-100/80 rounded-2xl p-4">
+              <div className="flex text-amber-500 text-xs mb-1">⭐⭐⭐⭐⭐</div>
+              <p className="text-xs text-gray-700 italic">"মাছের সাইজ ও টাটকা ভাব একদম বাজারের মতো ফ্রেশ পেয়েছি। ডেলিভারিও খুব দ্রুত হয়েছে।"</p>
+              <p className="text-[11px] font-bold text-gray-900 mt-2">— সুস্মিতা রায়, মধ্যমগ্রাম</p>
+            </div>
+            
+            <div className="bg-amber-50/50 border border-amber-100/80 rounded-2xl p-4">
+              <div className="flex text-amber-500 text-xs mb-1">⭐⭐⭐⭐⭐</div>
+              <p className="text-xs text-gray-700 italic">"খাসির মাংস অসাধারণ ছিল। প্যাকেজিং খুব পরিষ্কার-পরিচ্ছন্ন লেগেছে।"</p>
+              <p className="text-[11px] font-bold text-gray-900 mt-2">— অর্ঘ্য সেনগুপ্ত, বারাসাত</p>
+            </div>
+
+            <div className="bg-amber-50/50 border border-amber-100/80 rounded-2xl p-4">
+              <div className="flex text-amber-500 text-xs mb-1">⭐⭐⭐⭐⭐</div>
+              <p className="text-xs text-gray-700 italic">"অনলাইনে ফ্রেশ মাছ অর্ডার করার জন্য সেরা সার্ভিস। ২০০ টাকার ওপর ডেলিভারি ফ্রি পাওয়াটা দারুণ ব্যাপার।"</p>
+              <p className="text-[11px] font-bold text-gray-900 mt-2">— প্রিয়াঙ্কা দাস, সর্দিপুর</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Video Section */}
+      <section className="px-4 mt-8">
+        <div className="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs">
+          <div className="flex items-center gap-2 mb-4">
+            <Video className="text-amber-600" size={20} />
+            <h2 className="text-lg font-bold text-gray-900">আমাদের তাজা পণ্য ও রান্নার রেসিপি ভিডিও</h2>
+          </div>
+          <div className="w-full rounded-2xl overflow-hidden bg-gray-100 aspect-video">
+            <iframe
+              className="w-full h-full rounded-2xl object-cover"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+              title="Ginnimaa Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
       {/* Trust Badges */}
-      <section className="px-4 mt-6 mb-8">
+      <section className="px-4 mt-8 mb-4">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl p-4 text-center border border-gray-100 shadow-xs">
+          <div className="bg-white rounded-2xl p-4 text-center border border-amber-100 shadow-xs">
             <div className="text-2xl mb-1">⚡</div>
             <p className="text-xs font-bold text-gray-800">সকালের ডেলিভারি</p>
             <p className="text-[10px] text-gray-500 mt-0.5">অর্ডার অনুযায়ী তাজা কাটা</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 text-center border border-gray-100 shadow-xs">
+          <div className="bg-white rounded-2xl p-4 text-center border border-amber-100 shadow-xs">
             <div className="text-2xl mb-1">🧼</div>
             <p className="text-xs font-bold text-gray-800">১০০% স্বাস্থ্যসম্মত</p>
             <p className="text-[10px] text-gray-500 mt-0.5">ক্লিন ও ভ্যাকুয়াম প্যাকড</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 text-center border border-gray-100 shadow-xs">
+          <div className="bg-white rounded-2xl p-4 text-center border border-amber-100 shadow-xs">
             <div className="text-2xl mb-1">💵</div>
             <p className="text-xs font-bold text-gray-800">ক্যাশ ও UPI</p>
             <p className="text-[10px] text-gray-500 mt-0.5">COD ও QR পেমেন্ট সুবিধা</p>
@@ -330,4 +384,5 @@ export function Home() {
       </section>
     </div>
   );
-}
+      }
+            
