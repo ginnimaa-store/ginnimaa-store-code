@@ -74,7 +74,7 @@ export function Home() {
     );
   }
 
-  const serviceAreas = ['Barasat', 'Madhyamgram', 'Sodepur'];
+  const serviceAreas = ['Barasat', 'Madhyamgram', 'Barrackpore', 'Sodepur', 'Birati'];
 
   return (
     <div className="max-w-6xl mx-auto bg-amber-50/20 pb-12">
@@ -148,7 +148,7 @@ export function Home() {
             { label: 'Sea Fish', slug: 'sea-fish' },
             { label: 'Chicken', slug: 'chicken' },
             { label: 'Mutton', slug: 'mutton' },
-            { label: 'Spices', slug: 'spices' },
+            { label: 'Eggs', slug: 'eggs' },
           ].map(tag => (
             <Link
               key={tag.slug}
@@ -187,7 +187,7 @@ export function Home() {
               <Fish size={16} /> তাজা মাছ
             </Link>
             <Link
-              to="/products?category=meat"
+              to="/products?category=chicken"
               className="inline-flex items-center gap-1.5 bg-white/80 hover:bg-white text-amber-900 px-4 py-2.5 rounded-xl font-bold text-sm border border-amber-300 transition-colors shadow-xs"
             >
               <Drumstick size={16} /> মাংস
@@ -214,7 +214,7 @@ export function Home() {
         </Link>
 
         <Link
-          to="/products?category=meat"
+          to="/products?category=chicken"
           className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-700 to-amber-900 p-4 text-white shadow hover:shadow-md transition-all group"
         >
           <div className="relative z-10">
@@ -353,7 +353,7 @@ export function Home() {
           <div className="w-full rounded-2xl overflow-hidden bg-gray-100 aspect-video">
             <iframe
               className="w-full h-full rounded-2xl object-cover"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+              src="https://www.youtube.com/embed/videoseries?list=PLrAXtmRdnEQy6nuQy9qIqM0qKzv6yJqBq" 
               title="Ginnimaa Video"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
