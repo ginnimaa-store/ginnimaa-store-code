@@ -74,14 +74,14 @@ export function Home() {
     );
   }
 
-  const serviceAreas = ['Barasat', 'Madhyamgram', 'Barrackpore', 'Sodepur', 'Birati'];
+  const serviceAreas = ['Barasat', 'Madhyamgram'];
 
   return (
     <div className="max-w-6xl mx-auto bg-amber-50/20 pb-12">
       
       {/* ৫. অ্যাডভারটাইজমেন্ট / নোটিশ বার */}
       <div className="bg-amber-600 text-white text-xs py-2 px-4 text-center font-bold tracking-wide">
-        🔥 বিশেষ অফার: ২০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি! বারাসাত, মধ্যমগ্রাম ও সর্দিপুর এলাকায় সকালের তাজা মাছ ও মাংস।
+        🔥 বিশেষ অফার: ২০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি! বারাসাত, মধ্যমগ্রাম এলাকায় ভোরের তাজা মাছ ও মাংস।
       </div>
 
       {/* Service Area Info Bar with PIN checker */}
@@ -165,13 +165,13 @@ export function Home() {
       <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 m-4 rounded-3xl p-6 md:p-10 text-gray-900 shadow-md">
         <div className="relative z-10 max-w-xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/70 backdrop-blur-md rounded-full text-xs font-bold text-amber-900 mb-3 shadow-xs">
-            <MapPin size={13} /> সকালের তাজা স্টক ও হোম ডেলিভারি
+            <MapPin size={13} /> ভোরের তাজা স্টক ও হোম ডেলিভারি
           </div>
           <h1 className="text-2xl md:text-4xl font-black leading-tight text-gray-900">
             তাজা মাছ ও খাঁটি মাংস,<br />সরাসরি আপনার দরজায়
           </h1>
           <p className="mt-2 text-amber-950 text-sm md:text-base font-medium">
-            সকালে কাটা ফ্রেশ মাছ, দেশি মুরগি ও টাটকা খাসির মাংস — দ্রুত ও স্বাস্থ্যসম্মত হোম ডেলিভারি
+            ভোরের কাটা ফ্রেশ মাছ, সুগুনা ও দেশি মুরগি ও টাটকা খাসির মাংস — দ্রুত ও স্বাস্থ্যসম্মত হোম ডেলিভারি
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-5">
             <Link
@@ -337,7 +337,7 @@ export function Home() {
             <div className="bg-amber-50/50 border border-amber-100/80 rounded-2xl p-4">
               <div className="flex text-amber-500 text-xs mb-1">⭐⭐⭐⭐⭐</div>
               <p className="text-xs text-gray-700 italic">"অনলাইনে ফ্রেশ মাছ অর্ডার করার জন্য সেরা সার্ভিস। ২০০ টাকার ওপর ডেলিভারি ফ্রি পাওয়াটা দারুণ ব্যাপার।"</p>
-              <p className="text-[11px] font-bold text-gray-900 mt-2">— প্রিয়াঙ্কা দাস, সর্দিপুর</p>
+              <p className="text-[11px] font-bold text-gray-900 mt-2">— প্রিয়াঙ্কা দাস, হৃদয়পুর</p>
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@ export function Home() {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-white rounded-2xl p-4 text-center border border-amber-100 shadow-xs">
             <div className="text-2xl mb-1">⚡</div>
-            <p className="text-xs font-bold text-gray-800">সকালের ডেলিভারি</p>
+            <p className="text-xs font-bold text-gray-800">সকালে ও সন্ধ্যায় ডেলিভারি</p>
             <p className="text-[10px] text-gray-500 mt-0.5">অর্ডার অনুযায়ী তাজা কাটা</p>
           </div>
           <div className="bg-white rounded-2xl p-4 text-center border border-amber-100 shadow-xs">
