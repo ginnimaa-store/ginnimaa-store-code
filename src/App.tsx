@@ -1,47 +1,66 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from '@/context/CartContext';
-import { AuthProvider } from '@/context/AuthContext';
-import { Layout } from '@/components/Layout';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Home } from '@/pages/Home';
-import { AllProducts } from '@/pages/AllProducts';
-import { Categories } from '@/pages/Categories';
-import { ProductDetails } from '@/pages/ProductDetails';
-import { Cart } from '@/pages/Cart';
-import { Checkout } from '@/pages/Checkout';
-import { OrderConfirmation } from '@/pages/OrderConfirmation';
-import { AdminLogin } from '@/pages/AdminLogin';
-import { AdminDashboard } from '@/pages/AdminDashboard';
+import { Navbar } from '@/components/Navbar';
+import { Home } from '@/components/Home';
+import { Products } from '@/components/Products';
+import { ProductDetail } from '@/components/ProductDetail';
+import { Cart } from '@/components/Cart';
+import { Checkout } from '@/components/Checkout';
+import { OrderConfirmation } from '@/components/OrderConfirmation';
+import { CustomerAuth } from '@/components/CustomerAuth';
+import { CustomerProfile } from '@/components/CustomerProfile';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { AdminProducts } from '@/components/admin/AdminProducts';
+import { AdminOrders } from '@/components/admin/AdminOrders';
+import { AdminPincodes } from '@/components/admin/AdminPincodes';
+import { Footer } from '@/components/Footer';
 
-function App() {
+export function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <BrowserRouter>
+    <CartProvider>
+      <Router>
+        <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
           <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<AllProducts />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/product/:id" element={<ProductDetails />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="pincodes" element={<AdminPincodes />} />
             </Route>
-            <Route path="/admin/login" element={<AdminLogin />} />
+
+            {/* Customer & Storefront Routes */}
             <Route
-              path="/admin"
+              path="*"
               element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
+                <>
+                  <Navbar />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
+                      
+                      {/* নতুন কাস্টমার অথ এবং প্রোফাইল রাউট */}
+                      <Route path="/auth" element={<CustomerAuth />} />
+                      <Route path="/profile" element={<CustomerProfile />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
               }
             />
           </Routes>
-        </BrowserRouter>
-      </CartProvider>
-    </AuthProvider>
+        </div>
+      </Router>
+    </CartProvider>
   );
 }
 
 export default App;
+              
