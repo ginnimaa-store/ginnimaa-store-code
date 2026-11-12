@@ -80,7 +80,7 @@ export function OrderConfirmation() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-green-700 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function OrderConfirmation() {
     return (
       <div className="text-center py-20 text-gray-500">
         <p className="text-lg font-medium">Order not found</p>
-        <Link to="/" className="text-green-700 font-semibold mt-2 inline-block">Go home</Link>
+        <Link to="/" className="text-amber-600 font-semibold mt-2 inline-block hover:underline">Go home</Link>
       </div>
     );
   }
@@ -122,22 +122,22 @@ export function OrderConfirmation() {
     <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Success banner */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-3">
-          <CheckCircle size={36} className="text-green-600" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-100 mb-3 shadow-xs">
+          <CheckCircle size={36} className="text-amber-600" />
         </div>
         <h1 className="text-xl font-bold text-gray-900">Order Placed Successfully!</h1>
         <p className="text-sm text-gray-500 mt-1">Thank you for shopping with GINNIMAA</p>
       </div>
 
       {/* Order ID + OTP */}
-      <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100 mb-4">
+      <div className="bg-amber-50 rounded-2xl p-4 text-center border border-amber-100 mb-4 shadow-xs">
         <p className="text-xs text-gray-500 font-medium">Order ID</p>
-        <p className="text-lg font-bold text-green-700 tracking-wide">{order.order_number}</p>
-        <div className="mt-2 pt-2 border-t border-green-100">
-          <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-1">
-            <KeyRound size={12} /> ডেলিভারি OTP (কুরিয়ারকে দেখাবেন)
+        <p className="text-lg font-bold text-amber-700 tracking-wide">{order.order_number}</p>
+        <div className="mt-2 pt-2 border-t border-amber-200/60">
+          <p className="text-xs text-gray-600 font-medium flex items-center justify-center gap-1">
+            <KeyRound size={13} className="text-amber-600" /> ডেলিভারি OTP (কুরিয়ারকে দেখাবেন)
           </p>
-          <p className="text-2xl font-black text-green-800 tracking-[0.3em] mt-1">{order.delivery_otp}</p>
+          <p className="text-2xl font-black text-amber-900 tracking-[0.3em] mt-1">{order.delivery_otp}</p>
         </div>
       </div>
 
@@ -153,9 +153,9 @@ export function OrderConfirmation() {
       )}
 
       {/* Order status */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
+      <div className="bg-white rounded-2xl p-4 border border-amber-100 shadow-xs mb-4">
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100">
             <Package size={20} className="text-amber-600" />
           </div>
           <div>
@@ -166,23 +166,23 @@ export function OrderConfirmation() {
       </div>
 
       {/* Products */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
+      <div className="bg-white rounded-2xl p-4 border border-amber-100 shadow-xs mb-4">
         <h3 className="font-bold text-gray-900 mb-3">Products ({items.length} items)</h3>
         <div className="space-y-3">
           {items.map((item, idx) => (
             <div key={idx} className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
                 <img src={item.product_image || ''} alt={item.product_name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-gray-900 truncate">{item.product_name}</p>
+                <p className="font-semibold text-sm text-gray-900 truncate">{item.product_name}</p>
                 <p className="text-xs text-gray-400">{item.pack_size} • Qty: {item.quantity}</p>
               </div>
-              <span className="font-medium text-sm text-gray-900">{formatPrice(item.price * item.quantity)}</span>
+              <span className="font-bold text-sm text-gray-900">{formatPrice(item.price * item.quantity)}</span>
             </div>
           ))}
         </div>
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
+        <div className="mt-3 pt-3 border-t border-amber-100 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal</span>
             <span className="font-medium">{formatPrice(Number(order.subtotal))}</span>
@@ -190,46 +190,46 @@ export function OrderConfirmation() {
           <div className="flex justify-between">
             <span className="text-gray-600">Delivery charge</span>
             <span className="font-medium">
-              {Number(order.delivery_charge) === 0 ? <span className="text-green-600">FREE</span> : formatPrice(Number(order.delivery_charge))}
+              {Number(order.delivery_charge) === 0 ? <span className="text-amber-700 font-bold">FREE</span> : formatPrice(Number(order.delivery_charge))}
             </span>
           </div>
-          <div className="pt-2 border-t border-gray-100 flex justify-between">
+          <div className="pt-2 border-t border-amber-100 flex justify-between">
             <span className="font-bold text-gray-900">Total Amount</span>
-            <span className="font-bold text-green-700 text-lg">{formatPrice(Number(order.total))}</span>
+            <span className="font-extrabold text-amber-800 text-lg">{formatPrice(Number(order.total))}</span>
           </div>
         </div>
       </div>
 
       {/* Customer details */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
+      <div className="bg-white rounded-2xl p-4 border border-amber-100 shadow-xs mb-4">
         <h3 className="font-bold text-gray-900 mb-3">Delivery Details</h3>
         <div className="space-y-3 text-sm">
           <div className="flex items-start gap-3">
             <span className="text-gray-400 mt-0.5">Name:</span>
-            <span className="font-medium text-gray-900">{order.customer_name}</span>
+            <span className="font-semibold text-gray-900">{order.customer_name}</span>
           </div>
           <div className="flex items-start gap-3">
-            <Phone size={16} className="text-gray-400 mt-0.5 shrink-0" />
-            <span className="font-medium text-gray-900">{order.mobile_number}</span>
+            <Phone size={16} className="text-amber-600 mt-0.5 shrink-0" />
+            <span className="font-semibold text-gray-900">{order.mobile_number}</span>
           </div>
           <div className="flex items-start gap-3">
-            <MapPin size={16} className="text-gray-400 mt-0.5 shrink-0" />
+            <MapPin size={16} className="text-amber-600 mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-gray-900">{order.address}</p>
-              <p className="text-gray-500 text-xs">PIN: {order.pin_code}</p>
+              <p className="text-gray-500 text-xs mt-0.5">PIN: {order.pin_code}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Payment info */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-6">
+      <div className="bg-white rounded-2xl p-4 border border-amber-100 shadow-xs mb-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500">Payment Method</p>
             <p className="font-bold text-gray-900">{order.payment_method || 'Cash on Delivery'}</p>
           </div>
-          <p className="text-sm text-gray-500">Pay {formatPrice(Number(order.total))} on delivery</p>
+          <p className="text-sm text-gray-600 font-medium">Pay {formatPrice(Number(order.total))} on delivery</p>
         </div>
       </div>
 
@@ -237,17 +237,18 @@ export function OrderConfirmation() {
       <div className="flex gap-3">
         <Link
           to="/"
-          className="flex-1 py-3 rounded-xl font-semibold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3.5 rounded-xl font-bold text-xs md:text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 shadow-xs"
         >
-          <Home size={18} /> Home
+          <Home size={17} /> Home
         </Link>
         <Link
           to="/products"
-          className="flex-1 py-3 rounded-xl font-semibold text-sm bg-green-700 text-white hover:bg-green-800 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3.5 rounded-xl font-bold text-xs md:text-sm bg-amber-600 text-white hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 shadow-xs"
         >
-          <ShoppingBag size={18} /> Continue Shopping
+          <ShoppingBag size={17} /> Continue Shopping
         </Link>
       </div>
     </div>
   );
-}
+          }
+        
