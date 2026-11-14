@@ -121,7 +121,7 @@ export function Checkout() {
         throw new Error(customerErr?.message || 'কাস্টমার তথ্য সংরক্ষণ করা যায়নি।');
       }
 
-      // 2. Insert order (নিরাপদ ও নিশ্চিত কলামসমূহ)
+      // 2. Insert order with GPS coords and delivery OTP
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert({
@@ -138,6 +138,9 @@ export function Checkout() {
           payment_status: 'PENDING',
           payment_ref_id: paymentMethod === 'UPI_QR' ? paymentRefId.trim() : null,
           status: 'New',
+          delivery_otp: otp,
+          customer_lat: latitude,
+          customer_lng: longitude,
         })
         .select()
         .single();
