@@ -15,6 +15,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { Order, OrderItemJson, DeliveryPartner } from '@/types';
 import { formatPrice } from '@/lib/format';
+import { exportOrdersExcel, exportOrdersPDF, type ExportOrderRow } from '@/lib/export';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 
 const STATUSES = ['New', 'Confirmed', 'Packed', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
@@ -181,6 +183,40 @@ export function AdminOrders() {
     return p?.name || null;
   };
 
+  const buildExportRows = (): ExportOrderRow[] => {
+    return orders.map(o => ({
+      orderId: o.order_number,
+      date: new Date(o.created_at).toLocaleString('en-IN'),
+      customerName: o.customer_name,
+      phone: o.mobile_number,
+      address: `${o.address}, PIN: ${o.pin_code}`,
+      items: getDisplayItems(o).map(i => `${i.product_name} x${i.quantity}`).join('; '),
+      total: Number(o.total),
+      status: o.status,
+      otp: o.delivery_otp || '',
+      partner: partnerName(o.delivery_partner_id) || '',
+    }));
+  };
+
+  const handleExportExcel = () => {
+    const rows = buildExportRows();
+    if (rows.length === 0) return;
+    exportOrdersExcel(rows);
+  };
+
+  const handleExportPDF = () => {
+    const rows = buildExportRows();
+    if (rows.length === 0) return;
+    exportOrdersPDF(rows);
+  };
+
+  const getDirectionsUrl = (order: AdminOrder) => {
+    if (order.customer_lat && order.customer_lng) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${order.customer_lat},${order.customer_lng}`;
+    }
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address + ' ' + order.pin_code)}`;
+  };
+
   return (
     <div>
       {/* Stats Cards */}
@@ -213,6 +249,24 @@ export function AdminOrders() {
           </div>
           <p className="text-2xl font-black text-blue-700">{formatPrice(stats.revenue)}</p>
         </div>
+      </div>
+
+      {/* Export buttons */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={handleExportExcel}
+          disabled={orders.length === 0}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+        >
+          <FileSpreadsheet size={14} /> Export Excel
+        </button>
+        <button
+          onClick={handleExportPDF}
+          disabled={orders.length === 0}
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors disabled:opacity-50"
+        >
+          <FileText size={14} /> Export PDF
+        </button>
       </div>
 
       {/* Filter tabs */}
@@ -377,16 +431,14 @@ export function AdminOrders() {
                   <div className="flex items-center gap-2"><User size={14} className="text-gray-400" /><span className="font-medium text-gray-900">{selectedOrder.customer_name}</span></div>
                   <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /><a href={`tel:${selectedOrder.mobile_number}`} className="font-medium text-emerald-700">{selectedOrder.mobile_number}</a></div>
                   <div className="flex items-start gap-2"><MapPin size={14} className="text-gray-400 mt-0.5" /><div><p className="font-medium text-gray-900">{selectedOrder.address}</p><p className="text-xs text-gray-500">PIN: {selectedOrder.pin_code}</p></div></div>
-                  {selectedOrder.customer_lat && selectedOrder.customer_lng && (
-                    <a
-                      href={`https://www.google.com/maps?q=${selectedOrder.customer_lat},${selectedOrder.customer_lng}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
-                    >
-                      <Navigation size={13} /> ম্যাপে দেখুন
-                    </a>
-                  )}
+                  <a
+                    href={getDirectionsUrl(selectedOrder)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
+                  >
+                    <Navigation size={13} /> Get Directions
+                  </a>
                 </div>
               </div>
 
