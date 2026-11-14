@@ -56,6 +56,15 @@ export function CustomerAuth() {
         }, { onConflict: 'mobile' });
       }
 
+      // If email confirmation is OFF, signUp returns a session immediately — log in directly
+      if (data.session) {
+        localStorage.setItem('ginnimaa_session', JSON.stringify(data.session));
+        setLoading(false);
+        navigate('/');
+        return;
+      }
+
+      // If no session returned, email confirmation is ON — show OTP verification
       setLoading(false);
       setSuccessMsg(t('আপনার ইমেলে একটি ওটিপি পাঠানো হয়েছে। কোডটি নিচে লিখুন।', 'An OTP has been sent to your email. Enter the code below.'));
       setMode('VERIFY_OTP');
