@@ -5,11 +5,13 @@ import { supabase } from '@/lib/supabase';
 import type { Product, Category } from '@/types';
 import { formatPrice, calculateDiscount } from '@/lib/format';
 import { useCart } from '@/context/CartContext';
+import { useLang } from '@/context/LanguageContext';
 
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { t } = useLang();
   const [product, setProduct] = useState<Product | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -52,9 +54,9 @@ export function ProductDetails() {
   if (!product) {
     return (
       <div className="text-center py-20 text-gray-500">
-        <p className="text-lg font-medium">পণ্যটি পাওয়া যায়নি</p>
+        <p className="text-lg font-medium">{t('পণ্যটি পাওয়া যায়নি', 'Product not found')}</p>
         <Link to="/products" className="text-emerald-700 font-semibold mt-2 inline-block">
-          সব পণ্য দেখুন
+          {t('সব পণ্য দেখুন', 'View all products')}
         </Link>
       </div>
     );
@@ -64,7 +66,7 @@ export function ProductDetails() {
   const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   const displayWeight = product.net_weight
-    ? `${product.net_weight} ${product.weight_unit === 'kg' ? 'কেজি' : product.weight_unit === 'gm' ? 'গ্রাম' : product.weight_unit || ''}`
+    ? `${product.net_weight} ${product.weight_unit === 'kg' ? t('কেজি', 'kg') : product.weight_unit === 'gm' ? t('গ্রাম', 'gm') : product.weight_unit || ''}`
     : product.pack_size;
 
   const unitOptions: string[] = product.unit_options
@@ -96,7 +98,7 @@ export function ProductDetails() {
     <div className="max-w-4xl mx-auto pb-6">
       <div className="px-4 py-3">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm font-semibold hover:text-gray-900 transition-colors">
-          <ArrowLeft size={16} /> পেছনে যান
+          <ArrowLeft size={16} /> {t('পেছনে যান', 'Go back')}
         </button>
       </div>
 
@@ -110,12 +112,12 @@ export function ProductDetails() {
             />
             {discount > 0 && (
               <span className="absolute top-4 left-4 bg-rose-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs">
-                {discount}% ছাড়
+                {discount}% {t('ছাড়', 'OFF')}
               </span>
             )}
             {isOutOfStock && (
               <span className="absolute top-4 right-4 bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">
-                স্টক শেষ
+                {t('স্টক শেষ', 'Out of Stock')}
               </span>
             )}
           </div>
@@ -132,12 +134,12 @@ export function ProductDetails() {
               )}
               {product.is_best_seller && (
                 <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full">
-                  <Star size={12} fill="currentColor" /> সেরা পছন্দ
+                  <Star size={12} fill="currentColor" /> {t('সেরা পছন্দ', 'Best Seller')}
                 </span>
               )}
               {product.is_on_offer && (
                 <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                  <Sparkles size={12} /> বিশেষ অফার
+                  <Sparkles size={12} /> {t('বিশেষ অফার', 'Special Offer')}
                 </span>
               )}
             </div>
@@ -157,10 +159,9 @@ export function ProductDetails() {
               <p className="text-sm text-gray-600 mt-3 leading-relaxed">{product.description}</p>
             )}
 
-            {/* Weight options selection */}
             {unitOptions.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-sm font-bold text-gray-900 mb-2">ওজন নির্বাচন করুন</h4>
+                <h4 className="text-sm font-bold text-gray-900 mb-2">{t('ওজন নির্বাচন করুন', 'Select Weight')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {unitOptions.map(opt => (
                     <button
@@ -179,10 +180,9 @@ export function ProductDetails() {
               </div>
             )}
 
-            {/* Cut preference selection */}
             {cutOptions.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-sm font-bold text-gray-900 mb-2">কাটের ধরন নির্বাচন করুন</h4>
+                <h4 className="text-sm font-bold text-gray-900 mb-2">{t('কাটের ধরন নির্বাচন করুন', 'Select Cut Type')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {cutOptions.map(opt => (
                     <button
@@ -201,7 +201,6 @@ export function ProductDetails() {
               </div>
             )}
 
-            {/* Price */}
             <div className="flex items-baseline gap-2 mt-4">
               <span className="text-2xl md:text-3xl font-black text-emerald-800">
                 {formatPrice(product.selling_price)}
@@ -214,17 +213,16 @@ export function ProductDetails() {
             </div>
 
             {!isOutOfStock && product.stock !== undefined && product.stock <= 5 && product.stock > 0 && (
-              <p className="text-xs text-amber-600 font-medium mt-1.5">শুধু {product.stock}টি বাকি! দ্রুত অর্ডার করুন</p>
+              <p className="text-xs text-amber-600 font-medium mt-1.5">{t(`শুধু ${product.stock}টি বাকি! দ্রুত অর্ডার করুন`, `Only ${product.stock} left! Order fast`)}</p>
             )}
 
             <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-medium">
-              <ShieldCheck size={14} /> ১০০% ফ্রেশ ও অথেনটিক
+              <ShieldCheck size={14} /> {t('১০০% ফ্রেশ ও অথেনটিক', '100% Fresh & Authentic')}
             </div>
 
-            {/* Quantity selector */}
             {!isOutOfStock && (
               <div className="mt-4">
-                <h4 className="text-sm font-bold text-gray-900 mb-2">পরিমাণ</h4>
+                <h4 className="text-sm font-bold text-gray-900 mb-2">{t('পরিমাণ', 'Quantity')}</h4>
                 <div className="flex items-center gap-2 bg-gray-100 rounded-xl p-1 w-fit">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -243,7 +241,6 @@ export function ProductDetails() {
               </div>
             )}
 
-            {/* Action buttons */}
             <div className="mt-5 flex flex-col gap-3">
               <div className="flex gap-3">
                 <button
@@ -258,14 +255,14 @@ export function ProductDetails() {
                   }`}
                 >
                   {isOutOfStock ? (
-                    'উপলব্ধ নেই'
+                    t('উপলব্ধ নেই', 'Unavailable')
                   ) : added ? (
                     <>
-                      <Check size={18} /> কার্টে যুক্ত হয়েছে
+                      <Check size={18} /> {t('কার্টে যুক্ত হয়েছে', 'Added to cart')}
                     </>
                   ) : (
                     <>
-                      <ShoppingCart size={18} /> কার্টে যোগ করুন
+                      <ShoppingCart size={18} /> {t('কার্টে যোগ করুন', 'Add to Cart')}
                     </>
                   )}
                 </button>
@@ -274,11 +271,11 @@ export function ProductDetails() {
                   disabled={isOutOfStock}
                   className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  এখনই কিনুন
+                  {t('এখনই কিনুন', 'Buy Now')}
                 </button>
               </div>
               <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500">
-                <Truck size={14} className="text-emerald-600" /> দ্রুততম ডেলিভারি সুবিধা
+                <Truck size={14} className="text-emerald-600" /> {t('দ্রুততম ডেলিভারি সুবিধা', 'Fastest delivery service')}
               </div>
             </div>
           </div>

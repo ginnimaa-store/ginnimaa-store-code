@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Package, Grid, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useLang } from '@/context/LanguageContext';
 
 export function BottomNav() {
   const location = useLocation();
   const { getItemCount } = useCart();
   const count = getItemCount();
+  const { t } = useLang();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -13,10 +15,10 @@ export function BottomNav() {
   };
 
   const navItems = [
-    { to: '/', icon: Home, label: 'Home' },
-    { to: '/products', icon: Package, label: 'Products' },
-    { to: '/categories', icon: Grid, label: 'Categories' },
-    { to: '/cart', icon: ShoppingCart, label: 'Cart', badge: count },
+    { to: '/', icon: Home, label: t('হোম', 'Home') },
+    { to: '/products', icon: Package, label: t('পণ্য', 'Products') },
+    { to: '/categories', icon: Grid, label: t('ক্যাটাগরি', 'Categories') },
+    { to: '/cart', icon: ShoppingCart, label: t('কার্ট', 'Cart'), badge: count },
   ];
 
   return (

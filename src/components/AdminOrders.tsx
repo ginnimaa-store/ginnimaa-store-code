@@ -17,6 +17,7 @@ import type { Order, OrderItemJson, DeliveryPartner } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { exportOrdersExcel, exportOrdersPDF, type ExportOrderRow } from '@/lib/export';
 import { FileSpreadsheet, FileText } from 'lucide-react';
+import { useLang } from '@/context/LanguageContext';
 
 const STATUSES = ['New', 'Confirmed', 'Packed', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
@@ -50,7 +51,7 @@ interface DisplayItem {
 function getDisplayItems(order: AdminOrder): DisplayItem[] {
   if (order.order_items && order.order_items.length > 0) {
     return order.order_items.map(oi => ({
-      product_name: oi.product?.name || 'পণ্য',
+      product_name: oi.product?.name || 'Product',
       product_image: oi.product?.image_url || null,
       pack_size: oi.product?.pack_size || oi.weight_option || null,
       quantity: oi.quantity,
@@ -74,6 +75,7 @@ function getDisplayItems(order: AdminOrder): DisplayItem[] {
 }
 
 export function AdminOrders() {
+  const { t } = useLang();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
@@ -224,28 +226,28 @@ export function AdminOrders() {
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
             <Package size={17} className="text-gray-400" />
-            <span className="text-xs text-gray-500 font-semibold">মোট অর্ডার</span>
+            <span className="text-xs text-gray-500 font-semibold">{t('মোট অর্ডার', 'Total Orders')}</span>
           </div>
           <p className="text-2xl font-black text-gray-900">{stats.total}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
             <Clock size={17} className="text-amber-500" />
-            <span className="text-xs text-gray-500 font-semibold">প্রক্রিয়াধীন</span>
+            <span className="text-xs text-gray-500 font-semibold">{t('প্রক্রিয়াধীন', 'Pending')}</span>
           </div>
           <p className="text-2xl font-black text-amber-600">{stats.pending}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
             <CheckCircle size={17} className="text-emerald-500" />
-            <span className="text-xs text-gray-500 font-semibold">ডেলিভার্ড</span>
+            <span className="text-xs text-gray-500 font-semibold">{t('ডেলিভার্ড', 'Delivered')}</span>
           </div>
           <p className="text-2xl font-black text-emerald-700">{stats.delivered}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp size={17} className="text-blue-500" />
-            <span className="text-xs text-gray-500 font-semibold">মোট আয়</span>
+            <span className="text-xs text-gray-500 font-semibold">{t('মোট আয়', 'Total Revenue')}</span>
           </div>
           <p className="text-2xl font-black text-blue-700">{formatPrice(stats.revenue)}</p>
         </div>
@@ -258,14 +260,14 @@ export function AdminOrders() {
           disabled={orders.length === 0}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
         >
-          <FileSpreadsheet size={14} /> Export Excel
+          <FileSpreadsheet size={14} /> {t('Export Excel', 'Export Excel')}
         </button>
         <button
           onClick={handleExportPDF}
           disabled={orders.length === 0}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors disabled:opacity-50"
         >
-          <FileText size={14} /> Export PDF
+          <FileText size={14} /> {t('Export PDF', 'Export PDF')}
         </button>
       </div>
 
@@ -281,7 +283,7 @@ export function AdminOrders() {
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
-            {s === 'all' ? 'সব অর্ডার' : s}
+            {s === 'all' ? t('সব অর্ডার', 'All Orders') : s}
           </button>
         ))}
       </div>
@@ -294,7 +296,7 @@ export function AdminOrders() {
       ) : orders.length === 0 ? (
         <div className="text-center py-16 text-gray-500 bg-white rounded-2xl border border-gray-100">
           <Package size={40} className="mx-auto text-gray-300" />
-          <p className="font-semibold text-sm mt-2">কোনো অর্ডার পাওয়া যায়নি</p>
+          <p className="font-semibold text-sm mt-2">{t('কোনো অর্ডার পাওয়া যায়নি', 'No orders found')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -313,7 +315,7 @@ export function AdminOrders() {
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-amber-50 text-amber-700 border border-amber-200'
                       }`}>
-                        {order.payment_status === 'VERIFIED' ? 'পেমেন্ট যাচাইকৃত' : 'পেমেন্ট বাকি'}
+                        {order.payment_status === 'VERIFIED' ? t('পেমেন্ট যাচাইকৃত', 'Payment Verified') : t('পেমেন্ট বাকি', 'Payment Pending')}
                       </span>
                     )}
                   </div>
@@ -327,7 +329,7 @@ export function AdminOrders() {
                   </p>
 
                   <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
-                    <span>{getDisplayItems(order).length}টি আইটেম</span>
+                    <span>{t(`${getDisplayItems(order).length}টি আইটেম`, `${getDisplayItems(order).length} items`)}</span>
                     <span>• PIN: <b>{order.pin_code}</b></span>
                     <span className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-medium text-gray-700">
                       {order.payment_method || 'COD'}
@@ -339,7 +341,7 @@ export function AdminOrders() {
                     )}
                     {partnerName(order.delivery_partner_id) && (
                       <span className="text-indigo-700 text-[11px] font-medium">
-                        কুরিয়ার: {partnerName(order.delivery_partner_id)}
+                        {t('কুরিয়ার', 'Courier')}: {partnerName(order.delivery_partner_id)}
                       </span>
                     )}
                   </div>
@@ -351,7 +353,7 @@ export function AdminOrders() {
                     onClick={() => setSelectedOrder(order)}
                     className="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1 ml-auto transition-colors"
                   >
-                    <Eye size={13} /> বিস্তারিত
+                    <Eye size={13} /> {t('বিস্তারিত', 'Details')}
                   </button>
                 </div>
               </div>
@@ -397,7 +399,7 @@ export function AdminOrders() {
             <div className="p-5 space-y-4">
               {/* Items */}
               <div>
-                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">আইটেম</h4>
+                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('আইটেম', 'Items')}</h4>
                 <div className="space-y-2">
                   {getDisplayItems(selectedOrder).map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3">
@@ -419,14 +421,14 @@ export function AdminOrders() {
 
               {/* Bill summary */}
               <div className="bg-gray-50 rounded-xl p-3 space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">সাবটোটাল</span><span className="font-medium">{formatPrice(Number(selectedOrder.subtotal))}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">ডেলিভারি চার্জ</span><span className="font-medium">{formatPrice(Number(selectedOrder.delivery_charge))}</span></div>
-                <div className="flex justify-between pt-1.5 border-t border-gray-200"><span className="font-bold text-gray-900">মোট</span><span className="font-bold text-emerald-700">{formatPrice(Number(selectedOrder.total))}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('সাবটোটাল', 'Subtotal')}</span><span className="font-medium">{formatPrice(Number(selectedOrder.subtotal))}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">{t('ডেলিভারি চার্জ', 'Delivery Charge')}</span><span className="font-medium">{formatPrice(Number(selectedOrder.delivery_charge))}</span></div>
+                <div className="flex justify-between pt-1.5 border-t border-gray-200"><span className="font-bold text-gray-900">{t('মোট', 'Total')}</span><span className="font-bold text-emerald-700">{formatPrice(Number(selectedOrder.total))}</span></div>
               </div>
 
               {/* Customer details */}
               <div>
-                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">কাস্টমার</h4>
+                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('কাস্টমার', 'Customer')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2"><User size={14} className="text-gray-400" /><span className="font-medium text-gray-900">{selectedOrder.customer_name}</span></div>
                   <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /><a href={`tel:${selectedOrder.mobile_number}`} className="font-medium text-emerald-700">{selectedOrder.mobile_number}</a></div>
@@ -437,7 +439,7 @@ export function AdminOrders() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
                   >
-                    <Navigation size={13} /> Get Directions
+                    <Navigation size={13} /> {t('Get Directions', 'Get Directions')}
                   </a>
                 </div>
               </div>
@@ -446,14 +448,14 @@ export function AdminOrders() {
               {selectedOrder.delivery_otp && (
                 <div className="bg-indigo-50 rounded-xl p-3 flex items-center gap-2">
                   <KeyRound size={16} className="text-indigo-600" />
-                  <span className="text-xs text-gray-600">ডেলিভারি OTP:</span>
+                  <span className="text-xs text-gray-600">{t('ডেলিভারি OTP:', 'Delivery OTP:')}</span>
                   <span className="text-lg font-black text-indigo-700 tracking-[0.2em]">{selectedOrder.delivery_otp}</span>
                 </div>
               )}
 
               {/* Payment status */}
               <div>
-                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">পেমেন্ট</h4>
+                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('পেমেন্ট', 'Payment')}</h4>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm text-gray-700">{selectedOrder.payment_method || 'COD'}</span>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -469,26 +471,26 @@ export function AdminOrders() {
                     onClick={() => updatePaymentStatus(selectedOrder.id, 'VERIFIED')}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
                   >
-                    যাচাই করুন
+                    {t('যাচাই করুন', 'Verify')}
                   </button>
                   <button
                     onClick={() => updatePaymentStatus(selectedOrder.id, 'PENDING')}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
                   >
-                    বাকি করুন
+                    {t('বাকি করুন', 'Mark Pending')}
                   </button>
                 </div>
               </div>
 
               {/* Delivery partner assignment */}
               <div>
-                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">ডেলিভারি পার্টনার</h4>
+                <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('ডেলিভারি পার্টনার', 'Delivery Partner')}</h4>
                 <select
                   value={selectedOrder.delivery_partner_id || ''}
                   onChange={e => assignPartner(selectedOrder.id, e.target.value)}
                   className="w-full px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 >
-                  <option value="">কুরিয়ার নির্বাচন করুন</option>
+                  <option value="">{t('কুরিয়ার নির্বাচন করুন', 'Select courier')}</option>
                   {deliveryPartners.map(p => (
                     <option key={p.id} value={p.id}>{p.name} {p.phone ? `• ${p.phone}` : ''}</option>
                   ))}

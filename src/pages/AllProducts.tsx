@@ -4,8 +4,10 @@ import { SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Product, Category } from '@/types';
 import { ProductCard } from '@/components/ProductCard';
+import { useLang } from '@/context/LanguageContext';
 
 export function AllProducts() {
+  const { t } = useLang();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,18 +53,18 @@ export function AllProducts() {
     <div className="max-w-6xl mx-auto px-4 py-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">{searchQuery ? `"${searchQuery}" এর ফলাফল` : 'সকল পণ্য'}</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{products.length}টি পণ্য পাওয়া গেছে</p>
+          <h1 className="text-xl font-bold text-gray-900">{searchQuery ? t(`"${searchQuery}" এর ফলাফল`, `Results for "${searchQuery}"`) : t('সকল পণ্য', 'All Products')}</h1>
+          <p className="text-xs text-gray-500 mt-0.5">{t(`${products.length}টি পণ্য পাওয়া গেছে`, `${products.length} products found`)}</p>
         </div>
         <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">
           {showFilter ? <X className="w-4 h-4" /> : <SlidersHorizontal className="w-4 h-4" />}
-          <span>ফিল্টার</span>
+          <span>{t('ফিল্টার', 'Filter')}</span>
         </button>
       </div>
 
       {showFilter && (
         <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200 flex flex-wrap gap-2">
-          <button onClick={() => setCategory('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!categorySlug ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}>সব পণ্য</button>
+          <button onClick={() => setCategory('')} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!categorySlug ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}>{t('সব পণ্য', 'All Products')}</button>
           {categories.map(c => (
             <button key={c.id} onClick={() => setCategory(c.slug)} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${categorySlug === c.slug ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}>{c.name}</button>
           ))}
@@ -76,7 +78,7 @@ export function AllProducts() {
       ) : products.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100 p-6">
           <Sparkles className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-          <h2 className="text-sm font-semibold text-gray-800">কোনো পণ্য পাওয়া যায়নি</h2>
+          <h2 className="text-sm font-semibold text-gray-800">{t('কোনো পণ্য পাওয়া যায়নি', 'No products found')}</h2>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -87,5 +89,4 @@ export function AllProducts() {
       )}
     </div>
   );
-        }
-        
+}

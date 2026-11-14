@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
+import { useLang } from '@/context/LanguageContext';
 
 export function Categories() {
+  const { t } = useLang();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +28,7 @@ export function Categories() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">সকল ক্যাটাগরি</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('সকল ক্যাটাগরি', 'All Categories')}</h1>
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
@@ -59,4 +61,4 @@ export function Categories() {
       )}
     </div>
   );
-              }
+}
