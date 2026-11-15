@@ -124,9 +124,9 @@ export function DeliveryPartner() {
 
   const getDirectionsUrl = (order: DeliveryOrder) => {
     if (order.customer_lat && order.customer_lng) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${order.customer_lat},${order.customer_lng}`;
+      return `https://www.google.com/maps/dir/?api=1&destination=${order.customer_lat},${order.customer_lng}&travelmode=driving`;
     }
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address + ' ' + order.pin_code)}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address + ' ' + order.pin_code)}&travelmode=driving`;
   };
 
   const openOrderDetail = async (order: DeliveryOrder) => {
@@ -227,22 +227,32 @@ export function DeliveryPartner() {
               <div key={order.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-xs">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
                       <span className="font-bold text-gray-900 text-sm">{order.order_number}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
                         {order.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1.5 text-sm">
-                      <User size={13} className="text-gray-400" />
-                      <span className="font-semibold text-gray-800">{order.customer_name}</span>
-                    </div>
-                    <a href={`tel:${order.mobile_number}`} className="flex items-center gap-1.5 mt-1 text-xs text-emerald-700 font-medium">
-                      <Phone size={12} /> {order.mobile_number}
-                    </a>
-                    <div className="flex items-start gap-1.5 mt-1 text-xs text-gray-500">
-                      <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
-                      <span>{order.address}, PIN: {order.pin_code}</span>
+                    {/* Customer name — prominent bold */}
+                    <p className="text-base font-bold text-gray-900 leading-tight">{order.customer_name}</p>
+                    {/* Phone (click-to-call) + Address (click for navigation) side-by-side */}
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <a
+                        href={`tel:${order.mobile_number}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                      >
+                        <Phone size={13} className="shrink-0" /> {order.mobile_number}
+                      </a>
+                      <span className="text-gray-300">|</span>
+                      <a
+                        href={getDirectionsUrl(order)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-800 transition-colors min-w-0"
+                      >
+                        <Navigation size={13} className="shrink-0" />
+                        <span className="truncate">{order.address}, PIN: {order.pin_code}</span>
+                      </a>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -253,14 +263,6 @@ export function DeliveryPartner() {
 
                 {/* Action buttons */}
                 <div className="flex gap-2 flex-wrap">
-                  <a
-                    href={getDirectionsUrl(order)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
-                  >
-                    <Navigation size={14} /> Get Directions
-                  </a>
                   <button
                     onClick={() => openOrderDetail(order)}
                     className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"

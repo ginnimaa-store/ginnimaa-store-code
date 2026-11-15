@@ -214,9 +214,9 @@ export function AdminOrders() {
 
   const getDirectionsUrl = (order: AdminOrder) => {
     if (order.customer_lat && order.customer_lng) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${order.customer_lat},${order.customer_lng}`;
+      return `https://www.google.com/maps/dir/?api=1&destination=${order.customer_lat},${order.customer_lng}&travelmode=driving`;
     }
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address + ' ' + order.pin_code)}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address + ' ' + order.pin_code)}&travelmode=driving`;
   };
 
   return (
@@ -320,11 +320,29 @@ export function AdminOrders() {
                     )}
                   </div>
 
-                  <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {order.customer_name} <span className="text-xs font-normal text-gray-500">• {order.mobile_number}</span>
-                  </p>
+                  {/* Customer name — prominent bold */}
+                  <p className="text-base font-bold text-gray-900 leading-tight mt-1">{order.customer_name}</p>
+                  {/* Phone (click-to-call) + Address (click for navigation) side-by-side */}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <a
+                      href={`tel:${order.mobile_number}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+                    >
+                      <Phone size={13} className="shrink-0" /> {order.mobile_number}
+                    </a>
+                    <span className="text-gray-300">|</span>
+                    <a
+                      href={getDirectionsUrl(order)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-800 transition-colors min-w-0"
+                    >
+                      <Navigation size={13} className="shrink-0" />
+                      <span className="truncate">{order.address}, PIN: {order.pin_code}</span>
+                    </a>
+                  </div>
 
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-1">
                     {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • {new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
 
@@ -431,16 +449,21 @@ export function AdminOrders() {
                 <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{t('কাস্টমার', 'Customer')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2"><User size={14} className="text-gray-400" /><span className="font-medium text-gray-900">{selectedOrder.customer_name}</span></div>
-                  <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /><a href={`tel:${selectedOrder.mobile_number}`} className="font-medium text-emerald-700">{selectedOrder.mobile_number}</a></div>
-                  <div className="flex items-start gap-2"><MapPin size={14} className="text-gray-400 mt-0.5" /><div><p className="font-medium text-gray-900">{selectedOrder.address}</p><p className="text-xs text-gray-500">PIN: {selectedOrder.pin_code}</p></div></div>
-                  <a
-                    href={getDirectionsUrl(selectedOrder)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
-                  >
-                    <Navigation size={13} /> {t('Get Directions', 'Get Directions')}
-                  </a>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a href={`tel:${selectedOrder.mobile_number}`} className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:text-emerald-800 transition-colors">
+                      <Phone size={14} className="shrink-0" /> {selectedOrder.mobile_number}
+                    </a>
+                    <span className="text-gray-300">|</span>
+                    <a
+                      href={getDirectionsUrl(selectedOrder)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-medium text-indigo-700 hover:text-indigo-800 transition-colors min-w-0"
+                    >
+                      <Navigation size={14} className="shrink-0" />
+                      <span className="truncate">{selectedOrder.address}, PIN: {selectedOrder.pin_code}</span>
+                    </a>
+                  </div>
                 </div>
               </div>
 
