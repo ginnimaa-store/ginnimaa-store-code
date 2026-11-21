@@ -45,7 +45,12 @@ export function Header() {
               <Menu size={24} />
             </button>
 
-            <Link to="/" className="flex items-center gap-2 shrink-0">
+            <Link to="/" className="flex items-center gap-1.5 shrink-0 cursor-pointer" aria-label="GINNIMAA home">
+              <img
+                src="/assets/Ginnimaa_Header_Logo_400px.png"
+                alt="GINNIMAA"
+                className="h-12 w-12 md:h-14 md:w-14 object-contain"
+              />
               <span className="text-xl md:text-2xl font-black text-amber-600 tracking-tight">GINNIMAA</span>
             </Link>
 
@@ -82,26 +87,3 @@ export function Header() {
               {/* Right menu button */}
               <button
                 onClick={() => setRightOpen(true)}
-                className="p-1.5 text-gray-700 hover:text-amber-600 transition-colors"
-                aria-label="More"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-          </div>
-
-          <form onSubmit={handleSearch} className="mt-3 relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={t('তাজা মাছ, মাংস বা অন্যান্য পণ্য খুঁজুন...', 'Search fresh fish, meat and more...')}
-              className="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 rounded-xl text-sm border border-amber-200 focus:outline-none:ring-2 focus:ring-amber-500 transition-all"
-            />
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-600" />
-          </form>
-        </div>
-      </header>
-    </>
-  );
-}
